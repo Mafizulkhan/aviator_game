@@ -1,0 +1,92 @@
+# Anti-Gravity KV — History Screen
+#:kivy 2.3
+
+<HistoryScreen>:
+    name: "history"
+    canvas.before:
+        Color:
+            rgba: 0.04, 0.04, 0.10, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [12, 12]
+        spacing: 10
+
+        # Header
+        BoxLayout:
+            size_hint_y: None
+            height: "50sp"
+            Button:
+                text: "‹"
+                font_size: "24sp"
+                size_hint_x: None
+                width: "44sp"
+                background_normal: ""
+                background_color: 0, 0, 0, 0
+                color: 0.6, 0.6, 0.9, 1
+                on_release: root.on_back()
+            Label:
+                text: "Round History"
+                font_size: "22sp"
+                bold: True
+                color: 0.55, 0.25, 1, 1
+
+        # Column headers
+        BoxLayout:
+            size_hint_y: None
+            height: "32sp"
+            padding: [6, 0]
+            spacing: 4
+            canvas.before:
+                Color:
+                    rgba: 0.10, 0.06, 0.22, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            Label:
+                text: "Round"
+                font_size: "12sp"
+                color: 0.6, 0.6, 0.8, 1
+                size_hint_x: 0.15
+            Label:
+                text: "Bet"
+                font_size: "12sp"
+                color: 0.6, 0.6, 0.8, 1
+                size_hint_x: 0.2
+            Label:
+                text: "Cash-out"
+                font_size: "12sp"
+                color: 0.6, 0.6, 0.8, 1
+                size_hint_x: 0.2
+            Label:
+                text: "Crash"
+                font_size: "12sp"
+                color: 0.6, 0.6, 0.8, 1
+                size_hint_x: 0.2
+            Label:
+                text: "Payout"
+                font_size: "12sp"
+                color: 0.6, 0.6, 0.8, 1
+                size_hint_x: 0.15
+            Label:
+                text: "Result"
+                font_size: "12sp"
+                color: 0.6, 0.6, 0.8, 1
+                size_hint_x: 0.1
+
+        # Scrollable list
+        ScrollView:
+            do_scroll_x: False
+            BoxLayout:
+                id: history_list
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 2
+                padding: 0
+
+                # Populated dynamically in Python if RecycleView is too complex
+                # Here we build them via Python on_enter

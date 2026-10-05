@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+.kivy/
+.buildozer/
+bin/
+dist/
+*.apk
+*.aab
+*.egg-info/
+venv/
+.venv/
+*.db
+*.sqlite
+
+# Android build caches
+.gradle/
+*.keystore
+*.jks
+# IDE / OS
+.DS_Store
+Thumbs.db

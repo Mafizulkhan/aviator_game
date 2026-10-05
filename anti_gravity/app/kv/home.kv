@@ -1,0 +1,103 @@
+# Anti-Gravity KV — Home Screen
+#:kivy 2.3
+
+<HomeScreen>:
+    name: "home"
+    canvas.before:
+        Color:
+            rgba: 0.04, 0.04, 0.10, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [30, 50, 30, 40]
+        spacing: 18
+
+        # ── Header ─────────────────────────────────────────────────────────
+        Label:
+            text: "🕷️  ANTI-GRAVITY"
+            font_size: "32sp"
+            bold: True
+            color: 0.55, 0.25, 1, 1
+            size_hint_y: None
+            height: "52sp"
+
+        Label:
+            text: "A Spider Crash Adventure"
+            font_size: "14sp"
+            color: 0.5, 0.5, 0.75, 1
+            size_hint_y: None
+            height: "28sp"
+
+        Widget:
+            size_hint_y: 0.08
+
+        # ── Menu buttons ────────────────────────────────────────────────────
+        Button:
+            id: btn_play
+            text: "▶  PLAY"
+            font_size: "22sp"
+            bold: True
+            size_hint_y: None
+            height: "64sp"
+            background_normal: ""
+            background_color: 0.55, 0.25, 1, 1
+            on_release: root.on_play()
+            canvas.before:
+                Color:
+                    rgba: 0.55, 0.25, 1, 0.25
+                RoundedRectangle:
+                    pos: self.x - 4, self.y - 4
+                    size: self.width + 8, self.height + 8
+                    radius: [14]
+            canvas.after:
+                Color:
+                    rgba: 1, 1, 1, 0.06
+                RoundedRectangle:
+                    pos: self.pos
+                    size: self.size
+                    radius: [10]
+
+        Button:
+            text: "📜  HISTORY"
+            font_size: "18sp"
+            size_hint_y: None
+            height: "54sp"
+            background_normal: ""
+            background_color: 0.12, 0.12, 0.25, 1
+            color: 0.75, 0.75, 1, 1
+            on_release: root.on_history()
+
+        Button:
+            text: "👤  PROFILE"
+            font_size: "18sp"
+            size_hint_y: None
+            height: "54sp"
+            background_normal: ""
+            background_color: 0.12, 0.12, 0.25, 1
+            color: 0.75, 0.75, 1, 1
+            on_release: root.on_profile()
+
+        Button:
+            text: "⚙️  SETTINGS"
+            font_size: "18sp"
+            size_hint_y: None
+            height: "54sp"
+            background_normal: ""
+            background_color: 0.12, 0.12, 0.25, 1
+            color: 0.75, 0.75, 1, 1
+            on_release: root.on_settings()
+
+        Button:
+            text: "❓  HOW TO PLAY"
+            font_size: "18sp"
+            size_hint_y: None
+            height: "54sp"
+            background_normal: ""
+            background_color: 0.08, 0.08, 0.18, 1
+            color: 0.6, 0.6, 0.9, 1
+            on_release: root.on_tutorial()
+
+        Widget:

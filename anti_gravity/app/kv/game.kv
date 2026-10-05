@@ -1,0 +1,293 @@
+# Anti-Gravity KV — Game Screen
+#:kivy 2.3
+#:import utils kivy.utils
+
+<GameScreen>:
+    name: "game"
+
+    canvas.before:
+        Color:
+            rgba: 0.03, 0.03, 0.08, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+        # Neon grid lines (horizontal)
+        Color:
+            rgba: 0.15, 0.05, 0.35, 0.4
+        Line:
+            points: [0, self.height * 0.25, self.width, self.height * 0.25]
+            width: 1
+        Line:
+            points: [0, self.height * 0.5, self.width, self.height * 0.5]
+            width: 1
+        Line:
+            points: [0, self.height * 0.75, self.width, self.height * 0.75]
+            width: 1
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: 0
+        spacing: 0
+
+        # ── Top bar ──────────────────────────────────────────────────────────
+        BoxLayout:
+            size_hint_y: None
+            height: "56sp"
+            padding: [12, 8]
+            spacing: 8
+            canvas.before:
+                Color:
+                    rgba: 0.07, 0.04, 0.18, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            Button:
+                text: "‹"
+                font_size: "24sp"
+                size_hint_x: None
+                width: "44sp"
+                background_normal: ""
+                background_color: 0, 0, 0, 0
+                color: 0.6, 0.6, 0.9, 1
+                on_release: root.on_back()
+
+            BoxLayout:
+                orientation: "vertical"
+                Label:
+                    text: "ANTI-GRAVITY"
+                    font_size: "16sp"
+                    bold: True
+                    color: 0.55, 0.25, 1, 1
+                    halign: "center"
+                    valign: "middle"
+                Label:
+                    text: root.connection_status_text
+                    font_size: "10sp"
+                    color: root.connection_status_color
+                    halign: "center"
+                    valign: "middle"
+
+            Label:
+                text: "💰 " + root.balance_text
+                font_size: "15sp"
+                color: 0.2, 1.0, 0.6, 1
+                size_hint_x: None
+                width: "140sp"
+                halign: "right"
+                text_size: self.size
+
+        # ── Spider canvas area ───────────────────────────────────────────────
+        RelativeLayout:
+            id: spider_area
+            size_hint_y: 0.45
+            canvas.before:
+                Color:
+                    rgba: 0.04, 0.02, 0.12, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+                # Glow aura behind multiplier
+                Color:
+                    rgba: root.multiplier_color[0], root.multiplier_color[1], root.multiplier_color[2], 0.1
+                Ellipse:
+                    pos: self.width / 2 - 80, self.height * 0.55
+                    size: 160, 60
+
+            # Spider label (moves vertically)
+            Label:
+                text: "🕷️"
+                font_size: "52sp"
+                pos_hint: {"center_x": 0.5}
+                y: spider_area.height * root.spider_y_ratio
+                size_hint: None, None
+                size: "70sp", "70sp"
+
+            # Big multiplier
+            Label:
+                id: mult_label
+                text: root.multiplier_text
+                font_size: "52sp"
+                bold: True
+                color: root.multiplier_color
+                pos_hint: {"center_x": 0.5, "center_y": 0.78}
+                size_hint: None, None
+                size: spider_area.width, "70sp"
+                halign: "center"
+                text_size: self.size
+
+            # Status text
+            Label:
+                text: root.status_text
+                font_size: "14sp"
+                color: 0.6, 0.6, 0.9, 1
+                pos_hint: {"center_x": 0.5, "center_y": 0.15}
+                size_hint: None, None
+                size: spider_area.width, "30sp"
+                halign: "center"
+                text_size: self.size
+
+        # ── Result overlay ───────────────────────────────────────────────────
+        BoxLayout:
+            size_hint_y: None
+            height: "36sp"
+            padding: [12, 4]
+            opacity: 1 if root.result_visible else 0
+
+            Label:
+                text: root.result_text
+                font_size: "17sp"
+                bold: True
+                color: root.result_color
+                halign: "center"
+                text_size: self.size
+
+        # ── History strip ────────────────────────────────────────────────────
+        ScrollView:
+            size_hint_y: None
+            height: "38sp"
+            do_scroll_y: False
+            do_scroll_x: True
+
+            BoxLayout:
+                orientation: "horizontal"
+                size_hint_x: None
+                width: max(self.minimum_width, 400)
+                padding: [12, 4]
+                spacing: 10
+
+                Label:
+                    text: " | ".join(root.history_items) if root.history_items else "No rounds yet"
+                    font_size: "13sp"
+                    color: 0.55, 0.55, 0.85, 1
+                    size_hint_x: None
+                    width: self.texture_size[0]
+
+        # ── Bet controls ─────────────────────────────────────────────────────
+        BoxLayout:
+            size_hint_y: None
+            height: "100sp"
+            padding: [12, 8]
+            spacing: 8
+            canvas.before:
+                Color:
+                    rgba: 0.06, 0.04, 0.16, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+
+            # Minus button
+            Button:
+                text: "–"
+                font_size: "24sp"
+                bold: True
+                size_hint_x: None
+                width: "48sp"
+                background_normal: ""
+                background_color: 0.18, 0.08, 0.38, 1
+                disabled: not root.bet_enabled
+                on_release: root.on_bet_minus()
+
+            # Bet presets + amount
+            BoxLayout:
+                orientation: "vertical"
+                spacing: 4
+
+                Label:
+                    text: "BET:  " + root.bet_text + " credits"
+                    font_size: "16sp"
+                    bold: True
+                    color: 0.9, 0.9, 1, 1
+                    size_hint_y: None
+                    height: "28sp"
+
+                BoxLayout:
+                    orientation: "horizontal"
+                    spacing: 6
+                    size_hint_y: None
+                    height: "34sp"
+
+                    Button:
+                        text: "10"
+                        font_size: "13sp"
+                        background_normal: ""
+                        background_color: 0.14, 0.06, 0.30, 1
+                        color: 0.7, 0.7, 1, 1
+                        disabled: not root.bet_enabled
+                        on_release: root.on_preset_bet(10)
+                    Button:
+                        text: "50"
+                        font_size: "13sp"
+                        background_normal: ""
+                        background_color: 0.14, 0.06, 0.30, 1
+                        color: 0.7, 0.7, 1, 1
+                        disabled: not root.bet_enabled
+                        on_release: root.on_preset_bet(50)
+                    Button:
+                        text: "100"
+                        font_size: "13sp"
+                        background_normal: ""
+                        background_color: 0.14, 0.06, 0.30, 1
+                        color: 0.7, 0.7, 1, 1
+                        disabled: not root.bet_enabled
+                        on_release: root.on_preset_bet(100)
+                    Button:
+                        text: "500"
+                        font_size: "13sp"
+                        background_normal: ""
+                        background_color: 0.14, 0.06, 0.30, 1
+                        color: 0.7, 0.7, 1, 1
+                        disabled: not root.bet_enabled
+                        on_release: root.on_preset_bet(500)
+                    Button:
+                        text: "1K"
+                        font_size: "13sp"
+                        background_normal: ""
+                        background_color: 0.14, 0.06, 0.30, 1
+                        color: 0.7, 0.7, 1, 1
+                        disabled: not root.bet_enabled
+                        on_release: root.on_preset_bet(1000)
+
+            # Plus button
+            Button:
+                text: "+"
+                font_size: "24sp"
+                bold: True
+                size_hint_x: None
+                width: "48sp"
+                background_normal: ""
+                background_color: 0.18, 0.08, 0.38, 1
+                disabled: not root.bet_enabled
+                on_release: root.on_bet_plus()
+
+        # ── Action button ─────────────────────────────────────────────────────
+        BoxLayout:
+            size_hint_y: None
+            height: "80sp"
+            padding: [20, 8]
+            spacing: 0
+
+            # PLAY button (visible when not running)
+            Button:
+                id: btn_play
+                text: "▶  PLAY"
+                font_size: "22sp"
+                bold: True
+                background_normal: ""
+                background_color: 0.55, 0.25, 1, 1
+                disabled: not root.bet_enabled
+                opacity: 1 if root.bet_enabled else 0
+                on_release: root.on_play()
+
+            # CASH OUT button (visible while running)
+            Button:
+                id: btn_cashout
+                text: "💸  CASH OUT  " + root.multiplier_text
+                font_size: "20sp"
+                bold: True
+                background_normal: ""
+                background_color: 0.15, 0.85, 0.45, 1
+                color: 0.04, 0.10, 0.04, 1
+                disabled: not root.cashout_enabled
+                opacity: 1 if root.cashout_enabled else 0
+                on_release: root.on_cashout()

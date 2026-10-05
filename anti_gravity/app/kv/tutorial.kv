@@ -1,0 +1,158 @@
+# Anti-Gravity KV — Tutorial Screen
+#:kivy 2.3
+
+<TutorialScreen>:
+    name: "tutorial"
+    canvas.before:
+        Color:
+            rgba: 0.04, 0.04, 0.10, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [24, 24]
+        spacing: 20
+
+        BoxLayout:
+            size_hint_y: None
+            height: "50sp"
+            Button:
+                text: "‹"
+                font_size: "24sp"
+                size_hint_x: None
+                width: "44sp"
+                background_normal: ""
+                background_color: 0, 0, 0, 0
+                color: 0.6, 0.6, 0.9, 1
+                on_release: root.on_back()
+            Label:
+                text: "How to Play"
+                font_size: "22sp"
+                bold: True
+                color: 0.55, 0.25, 1, 1
+
+        ScrollView:
+            BoxLayout:
+                orientation: "vertical"
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: 24
+                padding: [0, 10]
+
+                # Card 1
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: 8
+                    canvas.before:
+                        Color:
+                            rgba: 0.09, 0.06, 0.22, 1
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [12]
+                    padding: [16, 16]
+                    Label:
+                        text: "🕷️  Welcome to Anti-Gravity"
+                        font_size: "18sp"
+                        bold: True
+                        color: 0.55, 0.25, 1, 1
+                        size_hint_y: None
+                        height: "32sp"
+                    Label:
+                        text: "A futuristic spider climbs through space.\nThe multiplier starts at 1.00× and keeps rising.\n\nYour job: cash out before it crashes!"
+                        font_size: "14sp"
+                        color: 0.8, 0.8, 1, 1
+                        size_hint_y: None
+                        height: self.texture_size[1] + 20
+                        text_size: self.width - 32, None
+
+                # Card 2
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: 8
+                    canvas.before:
+                        Color:
+                            rgba: 0.09, 0.06, 0.22, 1
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [12]
+                    padding: [16, 16]
+                    Label:
+                        text: "💰  Place Your Bet"
+                        font_size: "18sp"
+                        bold: True
+                        color: 0.55, 0.25, 1, 1
+                        size_hint_y: None
+                        height: "32sp"
+                    Label:
+                        text: "Pick a bet amount from the preset buttons,\nor use + / – to set a custom value.\n\nPress PLAY to start the round."
+                        font_size: "14sp"
+                        color: 0.8, 0.8, 1, 1
+                        size_hint_y: None
+                        height: self.texture_size[1] + 20
+                        text_size: self.width - 32, None
+
+                # Card 3
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: 8
+                    canvas.before:
+                        Color:
+                            rgba: 0.09, 0.06, 0.22, 1
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [12]
+                    padding: [16, 16]
+                    Label:
+                        text: "✅  Cash Out in Time"
+                        font_size: "18sp"
+                        bold: True
+                        color: 0.55, 0.25, 1, 1
+                        size_hint_y: None
+                        height: "32sp"
+                    Label:
+                        text: "Press CASH OUT at any point while the spider is flying.\n\nCash out at 2.35× on a 100-credit bet → you win 235 credits.\nMiss it → you lose your bet."
+                        font_size: "14sp"
+                        color: 0.8, 0.8, 1, 1
+                        size_hint_y: None
+                        height: self.texture_size[1] + 20
+                        text_size: self.width - 32, None
+
+                # Card 4
+                BoxLayout:
+                    orientation: "vertical"
+                    size_hint_y: None
+                    height: self.minimum_height
+                    spacing: 8
+                    canvas.before:
+                        Color:
+                            rgba: 0.09, 0.06, 0.22, 1
+                        RoundedRectangle:
+                            pos: self.pos
+                            size: self.size
+                            radius: [12]
+                    padding: [16, 16]
+                    Label:
+                        text: "🔐  Provably Fair"
+                        font_size: "18sp"
+                        bold: True
+                        color: 0.55, 0.25, 1, 1
+                        size_hint_y: None
+                        height: "32sp"
+                    Label:
+                        text: "Every crash point is generated before the round\nusing a cryptographic seed.\n\nThe seed hash is shown before the round.\nThe full seed is revealed after — you can verify it!"
+                        font_size: "14sp"
+                        color: 0.8, 0.8, 1, 1
+                        size_hint_y: None
+                        height: self.texture_size[1] + 20
+                        text_size: self.width - 32, None

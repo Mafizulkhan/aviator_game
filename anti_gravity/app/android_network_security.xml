@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Anti-Gravity — Android Network Security Configuration
+  =====================================================
+
+  PURPOSE:
+    Android 9 (Pie, API 28+) blocks all cleartext (HTTP/WS) traffic by default.
+    This file selectively permits cleartext traffic to development LAN addresses
+    while keeping all other traffic as HTTPS/WSS only.
+
+  PRODUCTION:
+    Remove the <domain-config> block for cleartext before a production release.
+    Production backend must use HTTPS (TLS) and WSS (WebSocket Secure).
+
+  PLACEMENT:
+    This file is referenced from buildozer.spec via:
+      android.manifest.attributes = {"android:networkSecurityConfig": "@xml/ag_network_security"}
+    Buildozer will package it at:
+      res/xml/ag_network_security.xml
+
+  HOW TO ADD YOUR DEV SERVER IP:
+    Add a <domain> entry with your dev machine's LAN IP address.
+    Example: <domain includeSubdomains="false">192.168.1.100</domain>
+
+  See: https://developer.android.com/training/articles/security-config
+-->
+<network-security-config>
+
+    <!-- Base config: trust system CAs only (no user-installed CAs in production) -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!--
+      DEVELOPMENT ONLY: allow cleartext HTTP/WS to LAN dev server IPs.
+      Remove or restrict this block before building a production/release APK.
+
+      Replace 192.168.1.100 with your actual dev machine IP.
+      Run `ipconfig` (Windows) or `ip addr show` (Linux) to find it.
+    -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">192.168.1.100</domain>
+        <!-- Add additional LAN IPs here as needed, e.g.: -->
+        <!-- <domain includeSubdomains="false">192.168.0.105</domain> -->
+        <!-- Local emulator loopback (10.0.2.2 reaches host machine from Android emulator) -->
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </domain-config>
+
+</network-security-config>

@@ -1,0 +1,92 @@
+# Anti-Gravity KV — Settings Screen
+#:kivy 2.3
+
+<SettingsScreen>:
+    name: "settings"
+    canvas.before:
+        Color:
+            rgba: 0.04, 0.04, 0.10, 1
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        padding: [20, 20]
+        spacing: 20
+
+        BoxLayout:
+            size_hint_y: None
+            height: "50sp"
+            Button:
+                text: "‹"
+                font_size: "24sp"
+                size_hint_x: None
+                width: "44sp"
+                background_normal: ""
+                background_color: 0, 0, 0, 0
+                color: 0.6, 0.6, 0.9, 1
+                on_release: root.on_back()
+            Label:
+                text: "Settings"
+                font_size: "22sp"
+                bold: True
+                color: 0.55, 0.25, 1, 1
+
+        # SFX toggle
+        BoxLayout:
+            size_hint_y: None
+            height: "52sp"
+            Label:
+                text: "Sound Effects"
+                font_size: "17sp"
+                color: 0.85, 0.85, 1, 1
+            Switch:
+                id: sfx_switch
+                active: root.sfx_enabled
+                on_active: root.on_sfx_toggle(self.active)
+                size_hint_x: None
+                width: "80sp"
+
+        # Music toggle
+        BoxLayout:
+            size_hint_y: None
+            height: "52sp"
+            Label:
+                text: "Music"
+                font_size: "17sp"
+                color: 0.85, 0.85, 1, 1
+            Switch:
+                active: root.music_enabled
+                on_active: root.on_music_toggle(self.active)
+                size_hint_x: None
+                width: "80sp"
+
+        # Volume slider
+        BoxLayout:
+            orientation: "vertical"
+            size_hint_y: None
+            height: "80sp"
+            spacing: 6
+            Label:
+                text: "Volume: " + str(int(root.volume * 100)) + "%"
+                font_size: "16sp"
+                color: 0.85, 0.85, 1, 1
+                size_hint_y: None
+                height: "28sp"
+            Slider:
+                min: 0.0
+                max: 1.0
+                value: root.volume
+                on_value: root.on_volume_change(self.value)
+                cursor_size: "20sp", "20sp"
+
+        Widget:
+
+        # Version label
+        Label:
+            text: "Anti-Gravity v0.2.0 — Demo Mode"
+            font_size: "12sp"
+            color: 0.35, 0.35, 0.55, 1
+            size_hint_y: None
+            height: "28sp"

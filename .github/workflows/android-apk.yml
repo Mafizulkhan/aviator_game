@@ -1,0 +1,178 @@
+﻿# ─────────────────────────────────────────────────────────────────────────────
+# Anti-Gravity — Debug APK Build (GitHub Actions)
+# ─────────────────────────────────────────────────────────────────────────────
+# Builds the Kivy/python-for-android debug APK on a GitHub-hosted Ubuntu runner.
+# No WSL2 or local Linux installation is required.
+#
+# Trigger: push to main/master, PR to main/master, or manual workflow_dispatch.
+# Output:  GitHub Actions artifact named "anti-gravity-debug-apk"
+#
+# Steps:
+#   1. Run the full test suite (191 tests) — must pass before building.
+#   2. Install Buildozer and all Android build dependencies.
+#   3. Run `buildozer android debug` in anti_gravity/.
+#   4. Find the generated .apk under anti_gravity/bin/ and upload it.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Build Debug APK
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  # ── Job 1: Test suite ────────────────────────────────────────────────────────
+  test:
+    name: Run Test Suite (191 tests)
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: anti_gravity/requirements.txt
+
+      - name: Install Python dependencies
+        working-directory: anti_gravity
+        run: pip install -r requirements.txt
+
+      - name: Run full test suite
+        working-directory: anti_gravity
+        run: python -m pytest tests/ -v --tb=short --strict-markers 2>&1
+
+      - name: Verify test count >= 191
+        working-directory: anti_gravity
+        run: |
+          COUNT=$(python -m pytest tests/ --collect-only -q 2>/dev/null | tail -1 | grep -oP '^\d+')
+          echo "Collected test count: $COUNT"
+          if [ "$COUNT" -lt 191 ]; then
+            echo "ERROR: Expected >=191 tests, found $COUNT"
+            exit 1
+          fi
+
+  # ── Job 2: Build debug APK ───────────────────────────────────────────────────
+  build-apk:
+    name: Build Debug APK (Buildozer / Ubuntu)
+    runs-on: ubuntu-22.04
+    needs: test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            python3 python3-pip python3-venv git \
+            build-essential libssl-dev libffi-dev \
+            libltdl-dev zlib1g-dev cmake \
+            autoconf automake libtool \
+            libpcre3-dev libpcre2-dev \
+            pkg-config \
+            default-jdk-headless \
+            unzip wget \
+            ccache
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-buildozer-${{ runner.os }}-${{ hashFiles('anti_gravity/requirements.txt') }}
+          restore-keys: pip-buildozer-${{ runner.os }}-
+
+      - name: Cache Buildozer global directory
+        uses: actions/cache@v4
+        with:
+          path: ~/.buildozer
+          key: buildozer-global-${{ runner.os }}-api33-ndk25b-${{ hashFiles('anti_gravity/buildozer.spec') }}
+          restore-keys: |
+            buildozer-global-${{ runner.os }}-api33-ndk25b-
+            buildozer-global-${{ runner.os }}-
+
+      - name: Cache Buildozer project directory
+        uses: actions/cache@v4
+        with:
+          path: anti_gravity/.buildozer
+          key: buildozer-project-${{ runner.os }}-${{ hashFiles('anti_gravity/buildozer.spec') }}
+          restore-keys: buildozer-project-${{ runner.os }}-
+
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ccache-${{ runner.os }}-${{ github.sha }}
+          restore-keys: ccache-${{ runner.os }}-
+
+      - name: Install Buildozer and Cython
+        run: |
+          pip install --upgrade pip wheel setuptools
+          pip install buildozer cython
+
+      - name: Pre-accept Android SDK licenses
+        run: |
+          mkdir -p "$HOME/.buildozer/android/platform/android-sdk/licenses"
+          printf '\n8933bad161af4178b1185d1a37fbf41ea5269c55\n' > \
+            "$HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license"
+          printf '\n84831b9409646a918e30573bab4c9c91346d8abd\n' > \
+            "$HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license"
+
+      - name: Build debug APK
+        working-directory: anti_gravity
+        run: buildozer android debug 2>&1
+        env:
+          USE_CCACHE: "1"
+          CCACHE_DIR: "${{ runner.temp }}/.ccache"
+
+      - name: Locate generated APK
+        id: find_apk
+        working-directory: anti_gravity
+        run: |
+          APK_PATH=$(find bin/ -name "*-debug.apk" | head -1)
+          if [ -z "$APK_PATH" ]; then
+            echo "ERROR: No debug APK found in bin/"
+            ls -la bin/ || true
+            exit 1
+          fi
+          echo "APK found: $APK_PATH"
+          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
+          echo "apk_name=$(basename $APK_PATH)" >> "$GITHUB_OUTPUT"
+
+      - name: Show APK details
+        working-directory: anti_gravity
+        run: |
+          echo "APK name : ${{ steps.find_apk.outputs.apk_name }}"
+          echo "APK path : anti_gravity/${{ steps.find_apk.outputs.apk_path }}"
+          ls -lh "${{ steps.find_apk.outputs.apk_path }}"
+
+      - name: Upload debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anti-gravity-debug-apk
+          path: anti_gravity/${{ steps.find_apk.outputs.apk_path }}
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Upload Buildozer log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: buildozer-build-log
+          path: |
+            anti_gravity/.buildozer/android/platform/build-*/build.log
+            anti_gravity/.buildozer/logs/
+          retention-days: 7
+          if-no-files-found: ignore
