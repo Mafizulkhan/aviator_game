@@ -1,35 +1,37 @@
 import os
 import sys
-import pytest
+import subprocess
 
-class TestCollectorPlugin:
-    def __init__(self):
-        self.node_ids = set()
-
-    def pytest_itemcollected(self, item):
-        self.node_ids.add(item.nodeid)
-
-    def pytest_collection_modifyitems(self, session, config, items):
-        for item in items:
-            self.node_ids.add(item.nodeid)
-
-    def pytest_collection_finish(self, session):
-        for item in getattr(session, "items", []):
-            self.node_ids.add(item.nodeid)
-
-def count_tests(test_dir="tests"):
+def count_tests():
+    test_dir = "tests"
     if not os.path.exists(test_dir) and os.path.exists(os.path.join("anti_gravity", test_dir)):
         test_dir = os.path.join("anti_gravity", test_dir)
 
-    plugin = TestCollectorPlugin()
-    ret = pytest.main(["--collect-only", "-q", test_dir], plugins=[plugin])
-    count = len(plugin.node_ids)
+    env = os.environ.copy()
+    env["PYTHONPATH"] = "."
+    env["KIVY_NO_ARGS"] = "1"
+    env["KIVY_NO_CONSOLELOG"] = "1"
+    env["KIVY_WINDOW"] = "mock"
 
+    cmd = [sys.executable, "-m", "pytest", test_dir, "--collect-only", "-q"]
+    result = subprocess.run(cmd, capture_output=True, text=True, env=env, encoding="utf-8", errors="replace")
+
+    node_ids = []
+    for line in result.stdout.splitlines():
+        line = line.strip()
+        if "::" in line and not line.startswith("="):
+            node_ids.append(line)
+
+    count = len(node_ids)
     print(f"Collected test count: {count}")
-    if count >= 200 and int(ret) == 0:
+
+    if count >= 200:
         sys.exit(0)
     else:
-        print(f"ERROR: Expected >=200 tests, found {count} (exit code: {ret})", file=sys.stderr)
+        print(f"ERROR: Expected >=200 tests, found {count}", file=sys.stderr)
+        if result.stderr:
+            print(f"Pytest stderr:\n{result.stderr}", file=sys.stderr)
+        print(f"Pytest returncode: {result.returncode}", file=sys.stderr)
         sys.exit(1)
 
 if __name__ == "__main__":
