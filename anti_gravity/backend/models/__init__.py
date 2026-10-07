@@ -24,6 +24,7 @@ Performance indexes are added on columns frequently used in WHERE and ORDER BY c
 from __future__ import annotations
 
 import enum
+from typing import Optional, List
 from datetime import datetime, timezone
 
 from sqlalchemy import (
@@ -226,4 +227,4 @@ class AuditLog(Base):
     ip_address:    Mapped[str | None]      = mapped_column(String(50), nullable=True)
     created_at:    Mapped[datetime]        = mapped_column(DateTime(timezone=True), default=_now)
 
-    admin_user: Mapped["User | None"] = relationship("User", back_populates="audit_logs")
+    admin_user: Mapped[Optional[User]] = relationship("User", back_populates="audit_logs")
