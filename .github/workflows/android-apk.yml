@@ -60,7 +60,7 @@ jobs:
           KIVY_WINDOW: "mock"
         run: |
           mkdir -p test-results
-          python -m pytest tests/ -v --tb=short --junitxml=test-results/test-results.xml
+          python -m pytest -v --tb=short --junitxml=test-results/test-results.xml
 
       - name: Upload test results
         if: always()
