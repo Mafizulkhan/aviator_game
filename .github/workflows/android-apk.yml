@@ -58,7 +58,17 @@ jobs:
           KIVY_NO_ARGS: "1"
           KIVY_NO_CONSOLELOG: "1"
           KIVY_WINDOW: "mock"
-        run: python -m pytest tests/ -v --tb=short 2>&1
+        run: |
+          mkdir -p test-results
+          python -m pytest tests/ -v --tb=short | tee test-results/pytest.log
+
+      - name: Upload test results on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: anti_gravity/test-results/
+          retention-days: 7
 
       - name: Verify test count >= 200
         working-directory: anti_gravity
