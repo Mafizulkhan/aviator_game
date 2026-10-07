@@ -1,174 +1,244 @@
-# Anti-Gravity --- Full Development Plan
+# Anti-Gravity — Full Development Plan
+
+> **Document version:** 2.0  
+> **Last updated:** 2026-10-06  
+> **Status:** Active — source of truth  
+> **Owner:** Mafizul Khan  
+> **Environment:** Antigravity IDE · Windows · Python
+
+---
+
+## Table of Contents
+
+1. [Project Overview](#1-project-overview)
+2. [Product Goals](#2-product-goals)
+3. [Important Product Boundary](#3-important-product-boundary)
+4. [Recommended Technology Stack](#4-recommended-technology-stack)
+5. [Overall Architecture](#5-overall-architecture)
+6. [Game Screen](#6-game-screen)
+7. [Main Game Flow](#7-main-game-flow)
+8. [Multiplier Engine](#8-multiplier-engine)
+9. [Crash Point Generation](#9-crash-point-generation)
+10. [Provably-Fair Style Design](#10-provably-fair-style-design)
+11. [Example Fairness Module](#11-example-fairness-module)
+12. [Game State Machine](#12-game-state-machine)
+13. [Backend API](#13-backend-api)
+14. [WebSocket](#14-websocket)
+15. [Database Design](#15-database-design)
+16. [Wallet Logic](#16-wallet-logic)
+17. [Anti-Cheat Architecture](#17-anti-cheat-architecture)
+18. [Python Project Structure](#18-python-project-structure)
+19. [Kivy Application Screens](#19-kivy-application-screens)
+20. [Spider Animation](#20-spider-animation)
+21. [Visual Design](#21-visual-design)
+22. [Game Background](#22-game-background)
+23. [Sound System](#23-sound-system)
+24. [Animation Timing](#24-animation-timing)
+25. [Crash Synchronization](#25-crash-synchronization)
+26. [Cash-Out Race Handling](#26-cash-out-race-handling)
+27. [Authentication](#27-authentication)
+28. [Local Development Mode](#28-local-development-mode)
+29. [Production Mode](#29-production-mode)
+30. [Admin Panel](#30-admin-panel)
+31. [Analytics](#31-analytics)
+32. [Responsible Game Design](#32-responsible-game-design)
+33. [Testing Strategy](#33-testing-strategy)
+34. [Security Tests](#34-security-tests)
+35. [Offline Handling](#35-offline-handling)
+36. [Error Handling](#36-error-handling)
+37. [Logging](#37-logging)
+38. [API Security](#38-api-security)
+39. [Windows + Physical Android Phone Workflow](#39-windows--physical-android-phone-workflow)
+40. [Build Process](#40-build-process)
+41. [Buildozer Configuration](#41-buildozer-configuration)
+42. [CI/CD Pipeline — GitHub Actions](#42-cicd-pipeline--github-actions)
+43. [Antigravity Development Workflow](#43-antigravity-development-workflow)
+44. [Recommended Development Order](#44-recommended-development-order)
+45. [MVP Acceptance Criteria](#45-mvp-acceptance-criteria)
+46. [Suggested First Version](#46-suggested-first-version)
+47. [Version Roadmap](#47-version-roadmap)
+48. [Final Architecture](#48-final-architecture)
+49. [Antigravity Build Prompt](#49-antigravity-build-prompt)
+50. [Important Implementation Principle](#50-important-implementation-principle)
+51. [Definition of Done](#51-definition-of-done)
+52. [Current Operating Plan](#52-current-operating-plan)
+
+---
 
 ## 1. Project Overview
 
-**App Name:** Anti-Gravity\
-**Genre:** Crash / Multiplier Arcade Game\
-**Platform:** Android first, with optional Windows/Web builds\
-**Primary Language:** Python\
-**Development Environment:** Antigravity\
-**Recommended Python UI:** Kivy + KivyMD\
-**Backend:** FastAPI\
-**Database:** SQLite for development, PostgreSQL for production\
-**Game Model:** Virtual credits / non-cash gameplay
+| Field | Value |
+|---|---|
+| **App Name** | Anti-Gravity |
+| **Genre** | Crash / Multiplier Arcade Game |
+| **Platform** | Android first — optional Windows / Web builds |
+| **Primary Language** | Python (frontend and backend) |
+| **Frontend** | Python + Kivy + KivyMD |
+| **Backend** | Python + FastAPI |
+| **Dev Environment** | Antigravity IDE |
+| **Developer Laptop** | Windows |
+| **Primary Test Device** | Physical Android phone |
+| **Dev Database** | SQLite |
+| **Prod Database** | PostgreSQL |
+| **Game Model** | Virtual credits — no real money |
 
 ### Core Concept
 
-Anti-Gravity is inspired by the visual and gameplay structure of
-crash-style games.
+Anti-Gravity is inspired by the visual and gameplay structure of crash-style games.
 
 Instead of an airplane:
 
-> A **spider** climbs/flys upward through an animated environment.
+> A **cyber spider** climbs upward through a futuristic animated environment.
 
-The multiplier starts at **1.00x** and increases continuously.
+The multiplier starts at **1.00x** and increases continuously:
 
-Example:
-
-`1.00x → 1.05x → 1.20x → 1.50x → 2.00x → 5.00x → 10.00x`
-
-At an unpredictable point, the spider crashes/falls.
-
-The player must press **CASH OUT** before the crash.
-
-If cashing out at 2.35x with 100 virtual credits:
-
-`100 × 2.35 = 235 virtual credits`
-
-If the spider crashes before cash-out:
-
-`100 virtual credits → 0`
-
-This plan intentionally uses virtual credits and does not implement
-deposits, withdrawals, or real-money wagering.
-
-------------------------------------------------------------------------
-
-# 2. Product Goals
-
-## MVP Goals
-
-The first release should provide:
-
--   Attractive spider-themed crash animation
--   Live multiplier
--   Virtual-credit wallet
--   Bet amount selection
--   Start round
--   Cash-out button
--   Crash animation
--   Win/loss calculation
--   Round history
--   Statistics
--   Sound effects
--   Settings
--   Tutorial
--   Local account/profile
--   Server-synchronized game rounds
--   Fair/random crash generation
--   Basic admin/debug panel
-
-## Future Goals
-
-Possible future additions:
-
--   Multiplayer spectators
--   Leaderboards
--   Achievements
--   Missions
--   Daily virtual-credit rewards
--   Skins
--   Spider animations
--   Multiple environments
--   Seasonal themes
--   Cloud accounts
--   Push notifications
-
-------------------------------------------------------------------------
-
-# 3. Important Product Boundary
-
-Anti-Gravity should initially remain a **free-to-play virtual-credit
-game**.
-
-Do not implement:
-
--   Deposits
--   Withdrawals
--   Cash prizes
--   Cryptocurrency wagering
--   Payment-based betting
--   Real-money wallet
--   Automated betting with real money
-
-If the product is later intended to involve real-money gambling, that
-requires a separate legal/compliance architecture, jurisdiction-specific
-licensing, age verification, responsible-gaming controls, payment
-compliance, auditability, and certified game/RNG processes.
-
-------------------------------------------------------------------------
-
-# 4. Recommended Technology Stack
-
-## Mobile App
-
-``` text
-Python
-Kivy
-KivyMD
-Buildozer
-Android SDK
-Android NDK
+```
+1.00x → 1.05x → 1.20x → 1.50x → 2.00x → 5.00x → 10.00x
 ```
 
-## Backend
+At an unpredictable point, the spider crashes/falls. The player must press **CASH OUT** before the crash.
 
-``` text
-Python
-FastAPI
-Uvicorn
-Pydantic
-SQLAlchemy
+**Win example** — cash out at 2.35x with 100 credits:
+
+```
+100 × 2.35 = 235 virtual credits  (+135 profit)
 ```
 
-## Database
+**Loss example** — spider crashes before cash-out:
 
-Development:
-
-``` text
-SQLite
+```
+100 virtual credits → 0  (bet lost)
 ```
 
-Production:
+> [!IMPORTANT]
+> This plan intentionally uses **virtual credits only** and does not implement deposits, withdrawals, or real-money wagering of any kind.
 
-``` text
-PostgreSQL
+---
+
+## 2. Product Goals
+
+### MVP Goals
+
+The first release must provide:
+
+- Attractive spider-themed crash animation
+- Live multiplier display
+- Virtual-credit wallet
+- Bet amount selection (preset + custom)
+- Start round
+- Cash-out button
+- Crash animation with effects
+- Win/loss calculation
+- Round history
+- Statistics screen
+- Sound effects
+- Settings screen
+- Tutorial / How to Play
+- Local account / profile
+- Server-synchronized game rounds
+- Fair / random crash generation
+- Basic admin / debug panel
+
+### Future Goals
+
+Possible post-MVP additions:
+
+- Multiplayer spectators
+- Global leaderboards
+- Achievements system
+- Daily missions
+- Daily virtual-credit login rewards
+- Spider skins and visual themes
+- Additional spider animations
+- Multiple game environments
+- Seasonal themes
+- Cloud-synced accounts
+- Push notifications
+
+---
+
+## 3. Important Product Boundary
+
+Anti-Gravity must remain a **free-to-play virtual-credit game**.
+
+**Never implement:**
+
+- Deposits or withdrawals
+- Cash prizes
+- Cryptocurrency wagering
+- Payment-based betting
+- Real-money wallet
+- Automated betting with real money
+
+> [!WARNING]
+> If the product is later intended to involve real-money gambling, that requires a **separate** legal/compliance architecture, jurisdiction-specific licensing, age verification, responsible-gaming controls, payment compliance, auditability, and certified game/RNG processes. This is entirely out of scope for V1.
+
+---
+
+## 4. Recommended Technology Stack
+
+### Mobile App
+
+| Layer | Technology |
+|---|---|
+| Language | Python 3.11+ |
+| UI Framework | Kivy 2.x |
+| UI Components | KivyMD |
+| Android Packaging | Buildozer + python-for-android |
+| Android Tooling | Android SDK / NDK |
+
+### Backend
+
+| Layer | Technology |
+|---|---|
+| Language | Python 3.11+ |
+| Framework | FastAPI |
+| ASGI Server | Uvicorn |
+| Validation | Pydantic v2 |
+| ORM | SQLAlchemy 2.x |
+| Password Hashing | passlib + argon2-cffi |
+| Auth Tokens | python-jose (JWT) |
+
+### Database
+
+| Environment | Database |
+|---|---|
+| Development | SQLite |
+| Production | PostgreSQL 15+ |
+
+### Networking
+
+```
+REST API    — HTTP/HTTPS JSON endpoints
+WebSocket   — live game updates (/ws/game)
+HTTPS       — all production traffic encrypted
 ```
 
-## Networking
+### Development Environment
 
-``` text
-REST API
-WebSocket
-JSON
-HTTPS
+```
+Windows Laptop
+   |
+   +-- Antigravity IDE  -->  Python frontend + Python backend
+   +-- Git / GitHub     -->  version control + CI
+   +-- Android Studio   -->  Android SDK / Platform-Tools / Logcat
+   +-- ADB              -->  physical Android phone debugging
+   +-- GitHub Actions   -->  Linux Buildozer APK builds
 ```
 
-## Development
+**Rules:**
+- Antigravity is the primary development environment.
+- The developer laptop is Windows.
+- Both frontend and backend are Python.
+- The primary Android test target is a physical phone.
+- Ubuntu/WSL2 is **not required** on the developer laptop for the planned CI APK workflow.
+- Android Studio is used for Android tooling and debugging; the application is **not** rewritten as native Kotlin/Java.
 
-``` text
-Git
-GitHub
-Antigravity
-VS Code (optional)
-Android Studio (for SDK/logging)
+---
+
+## 5. Overall Architecture
+
 ```
-
-------------------------------------------------------------------------
-
-# 5. Overall Architecture
-
-``` text
                     ANTI-GRAVITY
                          |
           +--------------+--------------+
@@ -176,1739 +246,2373 @@ Android Studio (for SDK/logging)
       Android App                  Backend Server
        Kivy/KivyMD                    FastAPI
           |                             |
-          | REST/WebSocket              |
+          |   REST / WebSocket          |
           +-------------+---------------+
                         |
-                    PostgreSQL
+                   PostgreSQL
 ```
 
-For offline development/testing:
+**Offline development / testing (Demo Mode):**
 
-``` text
+```
 Kivy App
    |
-Local Game Engine
+Local Game Engine (Python)
    |
 SQLite
 ```
 
-------------------------------------------------------------------------
+---
 
-# 6. Game Screen
+## 6. Game Screen
 
-The main screen should contain:
-
-``` text
-+------------------------------------------------+
-|                 ANTI-GRAVITY                   |
-|                                                |
-|             Current Multiplier                 |
-|                    2.37x                       |
-|                                                |
-|                    🕷️                          |
-|                 /                              |
-|              SPIDER                            |
-|                                                |
-|        Animated sky/background                 |
-|                                                |
-|   +----------------------------------------+   |
-|   | Bet Amount                             |   |
-|   | [ 10 ] [ 50 ] [ 100 ] [ 500 ]         |   |
-|   +----------------------------------------+   |
-|                                                |
-|             [ CASH OUT ]                       |
-|                                                |
-| Balance: 10,000 credits                        |
-|                                                |
-| Previous: 1.24x  3.55x  1.08x  7.21x         |
-+------------------------------------------------+
+```
++--------------------------------------------------+
+|                  ANTI-GRAVITY                    |
+|                                                  |
+|             Current Multiplier                   |
+|                   2.37x                          |
+|                                                  |
+|                    spider                        |
+|                  / (climbing)                    |
+|                                                  |
+|        Animated deep-space background            |
+|        Stars / neon grid / particles             |
+|                                                  |
+|  +--------------------------------------------+  |
+|  | Bet Amount                                 |  |
+|  | [ 10 ]  [ 50 ]  [ 100 ]  [ 500 ]          |  |
+|  | [ Custom amount ]                          |  |
+|  +--------------------------------------------+  |
+|                                                  |
+|              [ CASH OUT ]                        |
+|                                                  |
+| Balance: 10,000 credits                          |
+|                                                  |
+| Recent: 1.24x  3.55x  1.08x  7.21x             |
++--------------------------------------------------+
 ```
 
-------------------------------------------------------------------------
+---
 
-# 7. Main Game Flow
+## 7. Main Game Flow
 
-## Step 1 --- Open App
+### Step 1 — Open App
 
-Show:
+Display splash screen:
 
-``` text
+```
 ANTI-GRAVITY
+A Spider Crash Adventure
 Loading...
 ```
 
-Then load the player profile.
+Then load the player profile and fetch current round state from server.
 
-## Step 2 --- Wallet
+### Step 2 — Wallet Display
 
-Example:
-
-``` text
+```
 Balance
 10,000 Credits
 ```
 
-## Step 3 --- Select Bet
+### Step 3 — Select Bet
 
-Example:
+Preset options:
 
-``` text
-10
-50
-100
-500
-1000
+```
+10 | 50 | 100 | 500 | 1,000
 ```
 
-The player can also enter a custom amount within the configured
-virtual-credit limits.
+Player may also enter a custom amount within the configured virtual-credit limits.
 
-## Step 4 --- Start Round
+### Step 4 — Start Round
 
-The server creates a unique round:
+Server creates a unique round:
 
-``` text
-round_id
-server_seed_hash
-start_timestamp
+```
+round_id          AG-20261002-00123
+server_seed_hash  sha256(server_seed)
+start_timestamp   UTC ISO-8601
 ```
 
-## Step 5 --- Multiplier Starts
+### Step 5 — Multiplier Starts
 
-``` text
+```
 1.00x
 ```
 
-Then increases continuously.
+Then increases continuously using the server-side multiplier function.
 
-## Step 6 --- Spider Animation
+### Step 6 — Spider Animation
 
-The spider moves upward while the multiplier increases.
+Spider moves upward while multiplier increases. Animation state is driven by server time, not frame count.
 
-## Step 7 --- Cash Out
+### Step 7 — Cash Out
 
-Player presses:
+Player presses **CASH OUT**. Server validates round is still active.
 
-``` text
-CASH OUT
+```
+Bet           = 100
+Cash-out      = 2.85x
+-------------------------------
+Payout        = 285 credits
+Profit        = 185 credits
 ```
 
-The server validates that the round is still active.
+### Step 8 — Crash
 
-Example:
+If crash occurs before cash-out:
 
-``` text
-Bet = 100
-Cash-out = 2.85x
-
-Payout = 285 credits
-Profit = 185 credits
 ```
-
-## Step 8 --- Crash
-
-If the crash occurs first:
-
-``` text
 CRASHED AT 1.73x
 ```
 
-The bet is lost.
+Bet is lost. Wallet is not updated.
 
-## Step 9 --- Round History
+### Step 9 — Round History
 
-Store:
+Stored per round:
 
-``` text
-Round ID
-Bet
-Crash multiplier
-Cash-out multiplier
-Result
-Timestamp
-```
+| Field | Description |
+|---|---|
+| Round ID | Unique round identifier |
+| Bet amount | Virtual credits wagered |
+| Crash multiplier | Server-generated crash point |
+| Cash-out multiplier | Player's exit point (if any) |
+| Result | WON / LOST |
+| Timestamp | UTC round end time |
 
-------------------------------------------------------------------------
+---
 
-# 8. Multiplier Engine
+## 8. Multiplier Engine
 
-The multiplier must be controlled by the server rather than trusting the
-mobile client.
+The multiplier is **server-controlled**. The client only displays the server state.
 
-Conceptually:
-
-``` python
+```python
 multiplier = calculate_multiplier(elapsed_time)
 ```
 
-The client only displays the server state.
+**Reference growth curve:**
 
-Example:
+| Elapsed | Multiplier |
+|---|---|
+| 0.0 s | 1.00x |
+| 1.0 s | 1.08x |
+| 2.0 s | 1.18x |
+| 3.0 s | 1.31x |
+| 4.0 s | 1.46x |
+| 5.0 s | 1.64x |
+| 10.0 s | ~2.70x |
 
-``` text
-0.0 sec  → 1.00x
-1.0 sec  → 1.08x
-2.0 sec  → 1.18x
-3.0 sec  → 1.31x
-4.0 sec  → 1.46x
-5.0 sec  → 1.64x
-```
+The exact growth curve (exponential base, speed factor) must be configurable via `game_settings`.
 
-The exact growth curve should be configurable.
+> [!IMPORTANT]
+> The mobile application **must never** calculate or trust its own multiplier value. All multiplier values come from the server.
 
-------------------------------------------------------------------------
+---
 
-# 9. Crash Point Generation
+## 9. Crash Point Generation
 
-For a fair virtual game, generate the crash point before the round
-starts.
+For a fair virtual game, generate the crash point **before the round starts** using a cryptographically secure random generator.
 
-Use a cryptographically secure random generator.
-
-Example concept:
-
-``` python
+```python
 import secrets
 
 random_value = secrets.randbits(256)
 ```
 
-Then convert the random value into a crash multiplier using a documented
-mathematical function.
+Then convert the random value into a crash multiplier using a documented mathematical function.
 
-Important:
+**Reference formula concept:**
 
-The mobile application must never determine the crash point.
+```python
+def calculate_crash_point(random_int: int, house_edge: float = 0.01) -> float:
+    """
+    Converts a 256-bit random integer to a crash multiplier.
+    house_edge: fraction retained by house (e.g. 0.01 = 1%)
+    """
+    e = 2**256
+    h = e - int(e * house_edge)
+    if random_int % e < h // 100:
+        return 1.0  # instant crash
+    result = h / (e - random_int % e)
+    return max(1.0, round(result, 2))
+```
 
-------------------------------------------------------------------------
+> [!CAUTION]
+> The mobile application must **never** determine the crash point. Crash logic lives exclusively on the server.
 
-# 10. Provably-Fair Style Design
+---
 
-A useful design is:
+## 10. Provably-Fair Style Design
 
 ### Before Round
 
-Generate:
-
-``` text
-server_seed
-```
-
-Publish:
-
-``` text
-SHA256(server_seed)
-```
-
-This is the commitment hash.
+1. Server generates `server_seed` (cryptographically secure).
+2. Server publishes `SHA256(server_seed)` — the **commitment hash**.
 
 ### During Round
 
-The server uses:
+Server uses:
 
-``` text
-server_seed
-round_id
-optional client_seed
+```
+server_seed + round_id + optional client_seed
 ```
 
-to derive the deterministic random value.
+to derive a deterministic random value via HMAC-SHA256.
 
 ### After Round
 
-Reveal:
+Server reveals `server_seed`.
 
-``` text
-server_seed
+Any player can verify:
+
+```python
+import hashlib
+assert hashlib.sha256(server_seed.encode()).hexdigest() == commitment_hash
 ```
 
-The client can verify:
+This makes the virtual game result fully **auditable**.
 
-``` text
-SHA256(server_seed)
+---
+
+## 11. Example Fairness Module
+
+**File:** `backend/game/fairness.py`
+
+**Responsibilities:**
+
+```
+generate_seed()            — cryptographically secure seed
+hash_seed(seed)            — SHA256 commitment
+generate_round_randomness(seed, round_id, client_seed)
+calculate_crash_point(randomness)
+verify_round(round_id)     — post-round audit
 ```
 
-matches the previously published hash.
+**Skeleton:**
 
-This makes the virtual game result auditable.
+```python
+import hashlib
+import hmac
+import secrets
 
-------------------------------------------------------------------------
 
-# 11. Example Fairness Module
-
-File:
-
-``` text
-backend/game/fairness.py
-```
-
-Responsibilities:
-
-``` text
-generate_seed()
-hash_seed()
-generate_round_randomness()
-calculate_crash_point()
-verify_round()
-```
-
-Example API:
-
-``` python
 class FairnessEngine:
 
-    def create_seed(self):
-        ...
+    def create_seed(self) -> str:
+        """Generate a new cryptographically secure server seed."""
+        return secrets.token_hex(32)
 
-    def commit_seed(self, seed):
-        ...
+    def commit_seed(self, seed: str) -> str:
+        """Return SHA256 commitment hash to publish before the round."""
+        return hashlib.sha256(seed.encode()).hexdigest()
 
-    def calculate_result(self, seed, round_id):
-        ...
+    def calculate_result(
+        self, seed: str, round_id: str, client_seed: str = ""
+    ) -> float:
+        """Derive crash multiplier deterministically from seed + round_id."""
+        message = f"{round_id}:{client_seed}".encode()
+        digest = hmac.new(seed.encode(), message, hashlib.sha256).hexdigest()
+        random_int = int(digest, 16)
+        return self._to_crash_multiplier(random_int)
 
-    def verify_result(self, seed, round_id):
-        ...
+    def verify_result(self, seed: str, round_id: str, expected_hash: str) -> bool:
+        """Confirm seed matches the published commitment hash."""
+        return self.commit_seed(seed) == expected_hash
+
+    def _to_crash_multiplier(self, random_int: int) -> float:
+        e = 2**256
+        house_edge = 0.01
+        h = e - int(e * house_edge)
+        if random_int % e < (h // 100):
+            return 1.0
+        result = h / (e - random_int % e)
+        return max(1.0, round(result, 2))
 ```
 
-------------------------------------------------------------------------
+---
 
-# 12. Game State Machine
+## 12. Game State Machine
 
-Use explicit game states.
+Use explicit, validated game states. Never allow invalid transitions.
 
-``` text
+```
 WAITING
-   ↓
+   |
 BETTING
-   ↓
-RUNNING
-   ↓
-CASHED_OUT
-   ↓
-ROUND_END
+   |
+RUNNING --------+
+   |            |
+CASHED_OUT   CRASHED
+   |            |
+ROUND_END ------+
 ```
 
-Or:
-
-``` text
-RUNNING
-   ↓
-CRASHED
-   ↓
-ROUND_END
-```
-
-Never allow invalid transitions.
-
-Example:
-
-``` python
+```python
 VALID_STATES = {
-    "WAITING",
-    "BETTING",
-    "RUNNING",
-    "CASHED_OUT",
-    "CRASHED",
-    "ROUND_END"
+    "WAITING", "BETTING", "RUNNING",
+    "CASHED_OUT", "CRASHED", "ROUND_END",
+}
+
+VALID_TRANSITIONS = {
+    "WAITING":    {"BETTING"},
+    "BETTING":    {"RUNNING"},
+    "RUNNING":    {"CASHED_OUT", "CRASHED"},
+    "CASHED_OUT": {"ROUND_END"},
+    "CRASHED":    {"ROUND_END"},
+    "ROUND_END":  {"WAITING"},
 }
 ```
 
-------------------------------------------------------------------------
+Raise an error on any attempted invalid transition.
 
-# 13. Backend API
+---
 
-## Authentication
+## 13. Backend API
 
-``` http
-POST /api/auth/register
-POST /api/auth/login
-POST /api/auth/logout
+### Authentication
+
+```http
+POST   /api/auth/register
+POST   /api/auth/login
+POST   /api/auth/logout
+POST   /api/auth/refresh
 ```
 
-## Player
+### Player
 
-``` http
-GET /api/player/profile
-GET /api/player/balance
-GET /api/player/history
+```http
+GET    /api/player/profile
+GET    /api/player/balance
+GET    /api/player/history
+PATCH  /api/player/settings
 ```
 
-## Game
+### Game
 
-``` http
-GET /api/game/current
-POST /api/game/join
-POST /api/game/cashout
-GET /api/game/history
+```http
+GET    /api/game/current
+POST   /api/game/join
+POST   /api/game/cashout
+GET    /api/game/history
 ```
 
-## Fairness
+### Fairness
 
-``` http
-GET /api/fairness/{round_id}
-GET /api/fairness/{round_id}/verify
+```http
+GET    /api/fairness/{round_id}
+GET    /api/fairness/{round_id}/verify
 ```
 
-## Health
+### Health
 
-``` http
-GET /api/health
+```http
+GET    /api/health
+GET    /api/health/detailed
 ```
 
-------------------------------------------------------------------------
+### Admin (protected — requires admin JWT)
 
-# 14. WebSocket
+```http
+POST   /api/admin/auth/login
+POST   /api/admin/auth/logout
 
-Use WebSocket for live game updates.
+GET    /api/admin/dashboard
+GET    /api/admin/users
+GET    /api/admin/users/{user_id}
+PATCH  /api/admin/users/{user_id}/status
 
-Endpoint:
+GET    /api/admin/rounds
+GET    /api/admin/rounds/{round_id}
 
-``` text
-/ws/game
+GET    /api/admin/transactions
+POST   /api/admin/wallet-adjustments
+
+GET    /api/admin/audit-logs
+
+GET    /api/admin/fairness/{round_id}
+
+GET    /api/admin/system/health
+
+GET    /api/admin/settings
+PATCH  /api/admin/settings
 ```
 
-Example server message:
+---
 
-``` json
+## 14. WebSocket
+
+**Endpoint:** `ws://host/ws/game`
+
+The server broadcasts live game events to all connected clients.
+
+### Multiplier Update
+
+```json
 {
-    "type": "multiplier_update",
-    "round_id": "AG-20261002-00123",
-    "multiplier": 2.37,
-    "status": "running"
+  "type": "multiplier_update",
+  "round_id": "AG-20261002-00123",
+  "multiplier": 2.37,
+  "elapsed_ms": 8420,
+  "status": "running"
 }
 ```
 
-Crash:
+### Crash Event
 
-``` json
+```json
 {
-    "type": "crash",
-    "round_id": "AG-20261002-00123",
-    "crash_multiplier": 3.42,
-    "status": "crashed"
+  "type": "crash",
+  "round_id": "AG-20261002-00123",
+  "crash_multiplier": 3.42,
+  "status": "crashed",
+  "server_seed_hash": "abc123..."
 }
 ```
 
-Cash-out:
+### Cash-Out Confirmation (private, per-player)
 
-``` json
+```json
 {
-    "type": "cashout",
-    "round_id": "AG-20261002-00123",
-    "multiplier": 2.81,
-    "payout": 281
+  "type": "cashout",
+  "round_id": "AG-20261002-00123",
+  "multiplier": 2.81,
+  "payout": 281,
+  "new_balance": 10181
 }
 ```
 
-------------------------------------------------------------------------
+### Round Start
 
-# 15. Database Design
-
-## users
-
-``` text
-id
-username
-email
-password_hash
-created_at
-status
+```json
+{
+  "type": "round_start",
+  "round_id": "AG-20261002-00124",
+  "server_seed_hash": "def456...",
+  "start_timestamp": "2026-10-02T14:23:01Z"
+}
 ```
 
-## wallets
+### Heartbeat (server -> client, every 5s)
 
-``` text
-id
-user_id
-balance
-updated_at
+```json
+{
+  "type": "ping",
+  "timestamp": 1727871781
+}
 ```
 
-## rounds
+---
 
-``` text
-id
-round_number
-server_seed_hash
-server_seed
-crash_multiplier
-started_at
-ended_at
-status
+## 15. Database Design
+
+### `users`
+
+| Column | Type | Notes |
+|---|---|---|
+| id | UUID PK | |
+| username | VARCHAR(50) UNIQUE | |
+| email | VARCHAR(255) UNIQUE | nullable for guest |
+| password_hash | TEXT | Argon2id |
+| created_at | TIMESTAMPTZ | |
+| last_login_at | TIMESTAMPTZ | |
+| status | ENUM | active / suspended / banned |
+| role | ENUM | player / admin / super_admin |
+
+### `wallets`
+
+| Column | Type | Notes |
+|---|---|---|
+| id | UUID PK | |
+| user_id | UUID FK -> users | |
+| balance | BIGINT | integer credits |
+| updated_at | TIMESTAMPTZ | |
+
+### `rounds`
+
+| Column | Type | Notes |
+|---|---|---|
+| id | UUID PK | |
+| round_number | BIGINT UNIQUE | auto-increment |
+| server_seed_hash | TEXT | published before round |
+| server_seed | TEXT | revealed after round |
+| client_seed | TEXT | optional player contribution |
+| crash_multiplier | NUMERIC(10,2) | |
+| started_at | TIMESTAMPTZ | |
+| ended_at | TIMESTAMPTZ | |
+| status | ENUM | waiting / running / crashed |
+
+### `bets`
+
+| Column | Type | Notes |
+|---|---|---|
+| id | UUID PK | |
+| round_id | UUID FK -> rounds | |
+| user_id | UUID FK -> users | |
+| amount | BIGINT | integer credits |
+| cashout_multiplier | NUMERIC(10,2) | NULL if lost |
+| payout | BIGINT | NULL if lost |
+| status | ENUM | placed / cashed_out / lost |
+| created_at | TIMESTAMPTZ | |
+
+### `transactions`
+
+| Column | Type | Notes |
+|---|---|---|
+| id | UUID PK | |
+| user_id | UUID FK -> users | |
+| type | ENUM | bet / payout / adjustment / bonus |
+| amount | BIGINT | signed integer |
+| balance_before | BIGINT | |
+| balance_after | BIGINT | |
+| reference_id | UUID | FK to bet or adjustment |
+| created_at | TIMESTAMPTZ | |
+
+### `game_settings`
+
+| Column | Type | Default |
+|---|---|---|
+| id | INTEGER PK | 1 (singleton) |
+| minimum_bet | BIGINT | 10 |
+| maximum_bet | BIGINT | 10000 |
+| starting_balance | BIGINT | 10000 |
+| house_edge | NUMERIC(4,4) | 0.0100 |
+| game_speed | NUMERIC(5,3) | 1.000 |
+| animation_speed | NUMERIC(5,3) | 1.000 |
+| betting_window_ms | INTEGER | 5000 |
+| maintenance_mode | BOOLEAN | false |
+| updated_at | TIMESTAMPTZ | |
+| updated_by | UUID FK -> users | |
+
+### `audit_logs`
+
+| Column | Type | Notes |
+|---|---|---|
+| id | UUID PK | |
+| admin_user_id | UUID FK -> users | |
+| action | VARCHAR(100) | e.g. USER_SUSPENDED |
+| target_type | VARCHAR(50) | user / round / setting |
+| target_id | UUID | |
+| payload_json | JSONB | sanitized change data |
+| ip_address | INET | |
+| created_at | TIMESTAMPTZ | append-only |
+
+---
+
+## 16. Wallet Logic
+
+Use **integer virtual credits** to avoid floating-point rounding errors.
+
 ```
-
-## bets
-
-``` text
-id
-round_id
-user_id
-amount
-cashout_multiplier
-payout
-status
-created_at
-```
-
-## transactions
-
-``` text
-id
-user_id
-type
-amount
-balance_before
-balance_after
-reference_id
-created_at
-```
-
-## game_settings
-
-``` text
-id
-minimum_bet
-maximum_bet
-starting_balance
-game_speed
-animation_speed
-maintenance_mode
-```
-
-------------------------------------------------------------------------
-
-# 16. Wallet Logic
-
-Use integer virtual credits whenever possible.
-
-Example:
-
-``` text
-Starting balance = 10,000
-
-Bet = 100
-
-Balance after bet = 9,900
+Starting balance  =  10,000
+Bet               =    -100
+-------------------------------
+After bet         =   9,900
 
 Cash-out at 2.50x
-
-Payout = 250
-
-Final balance = 10,150
+Payout            =    +250
+-------------------------------
+Final balance     =  10,150
 ```
 
-All balance changes should be processed server-side.
+All balance changes must be processed **server-side** inside a database transaction.
 
-Never trust:
+> [!CAUTION]
+> Never trust values sent by the client:
+> - `client_balance`
+> - `client_payout`
+> - `client_multiplier`
+> - `client_crash_point`
 
-``` text
-client_balance
-client_payout
-client_multiplier
+---
+
+## 17. Anti-Cheat Architecture
+
+**The client is untrusted.** Never calculate the final payout exclusively on the phone.
+
+**Server validates on every cash-out request:**
+
+```
+Valid JWT / authenticated user
+Round exists and belongs to this session
+Bet exists for this user in this round
+Round status == RUNNING
+Server clock has not yet passed crash time
+Bet status == PLACED (not already cashed out)
+Payout calculation is server-side
+Wallet update is within a DB transaction
+Result is written to audit log
 ```
 
-------------------------------------------------------------------------
+**Protection mechanisms:**
 
-# 17. Anti-Cheat Architecture
+| Mechanism | Purpose |
+|---|---|
+| HTTPS | Encrypt all traffic |
+| JWT bearer tokens | Authenticate every request |
+| Request validation (Pydantic) | Reject malformed inputs |
+| Rate limiting | Block flooding / brute-force |
+| Server-side game state | Authoritative source of truth |
+| Idempotency keys | Prevent duplicate cash-out |
+| DB transactions + row locking | Prevent race conditions |
+| Audit logs | Tamper evidence |
 
-The client is untrusted.
+---
 
-Never calculate final payout exclusively on the phone.
+## 18. Python Project Structure
 
-Server validates:
-
-``` text
-User
-Round
-Bet
-Round state
-Timestamp
-Cash-out request
-Crash status
-Payout
-Wallet balance
 ```
-
-Protection mechanisms:
-
--   HTTPS
--   Authentication tokens
--   Request validation
--   Rate limiting
--   Server-side game state
--   Transaction IDs
--   Idempotent cash-out endpoint
--   Database transactions
--   Audit logs
-
-------------------------------------------------------------------------
-
-# 18. Python Project Structure
-
-Recommended structure:
-
-``` text
 anti_gravity/
-│
-├── app/
-│   ├── main.py
-│   ├── config.py
-│   │
-│   ├── screens/
-│   │   ├── home.py
-│   │   ├── game.py
-│   │   ├── history.py
-│   │   ├── profile.py
-│   │   └── settings.py
-│   │
-│   ├── widgets/
-│   │   ├── spider.py
-│   │   ├── multiplier.py
-│   │   ├── cashout_button.py
-│   │   ├── bet_panel.py
-│   │   └── history_list.py
-│   │
-│   ├── services/
-│   │   ├── api.py
-│   │   ├── websocket.py
-│   │   ├── auth.py
-│   │   └── wallet.py
-│   │
-│   ├── assets/
-│   │   ├── images/
-│   │   ├── sounds/
-│   │   └── fonts/
-│   │
-│   └── kv/
-│       ├── main.kv
-│       ├── game.kv
-│       └── widgets.kv
-│
-├── backend/
-│   ├── main.py
-│   ├── config.py
-│   ├── database.py
-│   │
-│   ├── models/
-│   │   ├── user.py
-│   │   ├── wallet.py
-│   │   ├── round.py
-│   │   └── bet.py
-│   │
-│   ├── api/
-│   │   ├── auth.py
-│   │   ├── player.py
-│   │   ├── game.py
-│   │   └── fairness.py
-│   │
-│   └── game/
-│       ├── engine.py
-│       ├── fairness.py
-│       ├── multiplier.py
-│       └── state.py
-│
-├── tests/
-│   ├── test_game.py
-│   ├── test_fairness.py
-│   ├── test_wallet.py
-│   └── test_api.py
-│
-├── requirements.txt
-├── buildozer.spec
-├── README.md
-└── .env
+|
++-- app/                          # Kivy mobile frontend
+|   +-- main.py                   # App entry point
+|   +-- config.py                 # Environment-aware config
+|   |
+|   +-- screens/
+|   |   +-- splash.py
+|   |   +-- home.py
+|   |   +-- game.py
+|   |   +-- history.py
+|   |   +-- profile.py
+|   |   +-- settings.py
+|   |   +-- tutorial.py
+|   |
+|   +-- widgets/
+|   |   +-- spider.py             # Spider animation widget
+|   |   +-- multiplier.py         # Live multiplier display
+|   |   +-- cashout_button.py
+|   |   +-- bet_panel.py
+|   |   +-- history_list.py
+|   |   +-- background.py         # Animated space background
+|   |
+|   +-- services/
+|   |   +-- api.py                # REST client
+|   |   +-- websocket.py          # WebSocket client
+|   |   +-- auth.py               # Token storage + refresh
+|   |   +-- wallet.py             # Local wallet state
+|   |
+|   +-- assets/
+|   |   +-- images/
+|   |   |   +-- spider/           # Spider sprite frames
+|   |   |   +-- backgrounds/
+|   |   +-- sounds/
+|   |   |   +-- button_click.wav
+|   |   |   +-- round_start.wav
+|   |   |   +-- multiplier_tick.wav
+|   |   |   +-- cashout.wav
+|   |   |   +-- warning.wav
+|   |   |   +-- crash.wav
+|   |   |   +-- win.wav
+|   |   +-- fonts/
+|   |       +-- Orbitron-Regular.ttf
+|   |
+|   +-- kv/
+|       +-- main.kv
+|       +-- game.kv
+|       +-- screens.kv
+|       +-- widgets.kv
+|
++-- admin/                        # Separate web admin dashboard
+|   +-- frontend/
+|   |   +-- index.html
+|   |   +-- css/
+|   |   +-- js/
+|   |   +-- pages/
+|   |       +-- dashboard/
+|   |       +-- users/
+|   |       +-- rounds/
+|   |       +-- wallets/
+|   |       +-- audit/
+|   |       +-- fairness/
+|   |       +-- settings/
+|   |       +-- system/
+|   +-- README.md
+|
++-- backend/
+|   +-- main.py                   # FastAPI app entry point
+|   +-- config.py                 # Settings (pydantic-settings)
+|   +-- database.py               # SQLAlchemy engine + session
+|   |
+|   +-- models/
+|   |   +-- user.py
+|   |   +-- wallet.py
+|   |   +-- round.py
+|   |   +-- bet.py
+|   |   +-- transaction.py
+|   |   +-- game_settings.py
+|   |   +-- audit_log.py
+|   |
+|   +-- api/
+|   |   +-- auth.py
+|   |   +-- player.py
+|   |   +-- game.py
+|   |   +-- fairness.py
+|   |   +-- health.py
+|   |   +-- admin/
+|   |       +-- auth.py
+|   |       +-- dashboard.py
+|   |       +-- users.py
+|   |       +-- rounds.py
+|   |       +-- transactions.py
+|   |       +-- wallet_adjustments.py
+|   |       +-- audit_logs.py
+|   |       +-- fairness.py
+|   |       +-- settings.py
+|   |       +-- system.py
+|   |
+|   +-- game/
+|   |   +-- engine.py             # Main game loop
+|   |   +-- fairness.py           # FairnessEngine
+|   |   +-- multiplier.py         # Multiplier function
+|   |   +-- state.py              # GameStateMachine
+|   |
+|   +-- middleware/
+|       +-- auth.py               # JWT validation
+|       +-- rate_limit.py
+|       +-- audit.py              # Auto-audit middleware
+|
++-- tests/
+|   +-- unit/
+|   |   +-- test_game_engine.py
+|   |   +-- test_fairness.py
+|   |   +-- test_wallet.py
+|   |   +-- test_multiplier.py
+|   |   +-- test_state_machine.py
+|   +-- integration/
+|   |   +-- test_api_auth.py
+|   |   +-- test_api_game.py
+|   |   +-- test_websocket.py
+|   |   +-- test_cashout_race.py
+|   +-- stress/
+|       +-- test_load.py
+|
++-- .github/
+|   +-- workflows/
+|       +-- build_apk.yml         # GitHub Actions APK build
+|
++-- requirements.txt
++-- requirements-dev.txt
++-- buildozer.spec
++-- .env.example
++-- README.md
++-- CHANGELOG.md
 ```
 
-------------------------------------------------------------------------
+---
 
-# 19. Kivy Application Screens
+## 19. Kivy Application Screens
 
-## Splash Screen
+### Splash Screen
 
-``` text
-ANTI-GRAVITY
-
-A Spider Crash Adventure
-
-Loading...
+```
++------------------------------+
+|                              |
+|        ANTI-GRAVITY          |
+|    A Spider Crash Adventure  |
+|                              |
+|           [spider]           |
+|                              |
+|          Loading...          |
+|      [##########---]  60%    |
+|                              |
++------------------------------+
 ```
 
-## Home
+### Home / Main Menu
 
+```
 Buttons:
-
-``` text
-PLAY
-HISTORY
-PROFILE
-SETTINGS
-HOW TO PLAY
+  [ PLAY ]
+  [ HISTORY ]
+  [ PROFILE ]
+  [ SETTINGS ]
+  [ HOW TO PLAY ]
 ```
 
-## Game
+### Game Screen
 
-Components:
+Components (top to bottom):
 
-``` text
-Top bar
-Balance
-Multiplier
-Spider
-Background
-Bet controls
-Cash-out
-Round history
-Status
+```
+Top bar        --> balance | round ID | connection status
+Multiplier     --> large, animated numeric display
+Spider canvas  --> animated spider + particle trail
+Bet panel      --> preset amounts + custom input
+Cash-out btn   --> large, prominent
+Recent history --> scrolling multiplier chips at bottom
+Status bar     --> WAITING / BETTING / RUNNING / CRASHED
 ```
 
-## History
+### History Screen
 
-Display:
-
-``` text
-Round       Crash
-#1021       1.42x
-#1022       4.18x
-#1023       1.09x
-#1024       7.31x
+```
+Round #   Crash    Your Bet   Result
+----------------------------------------
+#1021     1.42x    100        LOST
+#1022     4.18x    50         WON (2.11x)
+#1023     1.09x    200        LOST
+#1024     7.31x    --         --
 ```
 
-## Profile
+### Profile Screen
 
-``` text
-Username
-Games Played
-Total Virtual Credits
-Wins
-Losses
-Best Cash-out
+```
+Username:        spider_player_01
+Member Since:    2026-10-01
+Games Played:    142
+Wins:            61
+Losses:          81
+Win Rate:        43%
+Best Cash-out:   8.42x
+Total Credits:   14,250
 ```
 
-------------------------------------------------------------------------
+### Settings Screen
 
-# 20. Spider Animation
+```
+Audio
+  Music           [ON / OFF]
+  Sound Effects   [ON / OFF]
+  Volume          [########--]  80%
 
-Use a sprite sheet or animated PNG.
+Display
+  Animations      [ON / OFF]
+  Particle FX     [ON / OFF]
 
-Animation states:
+Responsible Play
+  Session Timer   [ON / OFF]
+  Break Reminder  [ON / OFF]
 
-``` text
-idle
-climbing
-fast_climbing
-warning
-falling
-crashed
+Account
+  Change Password
+  Logout
 ```
 
-Example:
+---
 
-``` python
+## 20. Spider Animation
+
+Use a sprite sheet or a sequence of PNG frames.
+
+**Animation states:**
+
+| State | Trigger |
+|---|---|
+| `idle` | Waiting for round |
+| `climbing` | Multiplier 1.0x – 3.0x |
+| `fast_climbing` | Multiplier > 3.0x |
+| `warning` | High multiplier zone |
+| `falling` | Crash event received |
+| `crashed` | Spider hit ground |
+
+```python
 class SpiderWidget(Widget):
 
-    def update_position(self, multiplier):
-        self.y = calculate_spider_height(multiplier)
+    def update_state(self, multiplier: float, game_status: str) -> None:
+        if game_status == "crashed":
+            self.set_animation("falling")
+        elif multiplier >= 5.0:
+            self.set_animation("fast_climbing")
+        elif multiplier >= 1.0:
+            self.set_animation("climbing")
+        else:
+            self.set_animation("idle")
+
+    def update_position(self, multiplier: float) -> None:
+        self.y = self._calculate_height(multiplier)
+
+    def _calculate_height(self, multiplier: float) -> float:
+        max_height = self.parent.height * 0.85
+        return min(max_height, (multiplier - 1.0) * 80)
 ```
 
-Avoid tying animation directly to frame count.
+> [!TIP]
+> Drive animation from **server game time → multiplier → screen position**. Never tie animation to frame count — different devices run at different FPS.
 
-Instead:
+---
 
-``` text
-server game time
-        ↓
-multiplier
-        ↓
-animation position
-```
-
-This keeps all clients synchronized.
-
-------------------------------------------------------------------------
-
-# 21. Visual Design
-
-Suggested identity:
+## 21. Visual Design
 
 ### Primary Theme
 
-Dark futuristic interface.
+Dark futuristic / deep space aesthetic.
 
-### Main Elements
+### Color Palette
 
-``` text
-Black / deep-space background
-Neon purple
-Electric cyan
-Bright white text
-Red crash warning
+| Token | Value | Use |
+|---|---|---|
+| `--bg-primary` | `#050510` | Screen background |
+| `--bg-surface` | `#0D0D2B` | Cards, panels |
+| `--accent-purple` | `#7B2FFF` | Primary brand color |
+| `--accent-cyan` | `#00F5FF` | Highlights, glows |
+| `--text-primary` | `#FFFFFF` | Body text |
+| `--text-muted` | `#8888AA` | Labels, subtitles |
+| `--multiplier-green` | `#00FF88` | Live multiplier |
+| `--crash-red` | `#FF2255` | Crash warning / state |
+| `--win-gold` | `#FFD700` | Win result |
+
+### Typography
+
+- **Display / Multiplier:** Orbitron (Google Fonts) — futuristic, numeric
+- **Body / UI:** Inter or Roboto
+- **Monospace / Fairness:** JetBrains Mono
+
+### Spider Design
+
+Original futuristic cyber-spider:
+
+```
+Cyber Spider characteristics:
+  - 8 glowing neon legs (animated)
+  - Metallic / carbon-fiber body
+  - Glowing purple/cyan eyes
+  - Energy particle trail
+  - Mechanical joint details
+  - Crash state: sparks + fall animation
 ```
 
-### Spider
+> [!WARNING]
+> Do **not** copy Aviator's exact artwork, branding, logos, or proprietary assets. All Anti-Gravity visual assets must be original.
 
-Create an original futuristic spider character.
+---
 
-Possible design:
+## 22. Game Background
 
-``` text
-Cyber Spider
-8 glowing legs
-Neon body
-Mechanical details
-Energy trail
+**Environment:**
+
+```
+Deep space backdrop
+Scrolling parallax star layers (3 depths)
+Floating neon-grid platforms
+Occasional distant moon / asteroid
+Energy particle system
+Gravity-distortion field lines
 ```
 
-Do not copy Aviator's exact artwork, branding, logos, or proprietary
-assets.
+**At crash event:**
 
-------------------------------------------------------------------------
-
-# 22. Game Background
-
-Possible environment:
-
-``` text
-Dark space
-Floating platforms
-Stars
-Particles
-Moon
-Neon grid
-Gravity field
+```
+Screen shake          <- camera impulse
+Spider falls          <- falling animation + gravity
+Explosion particles   <- red + orange sparks
+Multiplier freezes    <- number locks with red tint
+Sound: crash.wav      <- plays immediately
+Cooldown overlay      <- 3-second pause before next round
 ```
 
-The spider moves vertically through the environment.
+---
 
-At crash:
+## 23. Sound System
 
-``` text
-screen shake
-spider falls
-particles
-sound
-multiplier freezes
+**Sound files** (`app/assets/sounds/`):
+
+| File | Trigger |
+|---|---|
+| `button_click.wav` | Any button press |
+| `round_start.wav` | Betting window opens |
+| `multiplier_tick.wav` | Each multiplier step (throttled) |
+| `cashout.wav` | Successful cash-out |
+| `warning.wav` | High multiplier zone (>5x) |
+| `crash.wav` | Spider crashes |
+| `win.wav` | Player wins |
+| `ambient.ogg` | Background music loop |
+
+**Settings:**
+
+```
+Music        ON / OFF
+Sound FX     ON / OFF
+Volume       0 – 100%
 ```
 
-------------------------------------------------------------------------
+Use Kivy's `SoundLoader` for cross-platform audio. Lazy-load sounds to avoid startup delay.
 
-# 23. Sound System
+---
 
-Sounds:
+## 24. Animation Timing
 
-``` text
-button_click.wav
-round_start.wav
-multiplier_tick.wav
-cashout.wav
-warning.wav
-crash.wav
-win.wav
+**Always use real elapsed time — never per-frame deltas.**
+
+```python
+import time
+
+class GameLoop:
+
+    def start(self):
+        self.start_time = time.monotonic()
+
+    def get_multiplier(self) -> float:
+        elapsed = time.monotonic() - self.start_time
+        return self.multiplier_function(elapsed)
 ```
 
-Add settings:
+> [!WARNING]
+> Do **not** use `multiplier += 0.01` on every frame.  
+> Different devices run at different frame rates (30 FPS vs 60 FPS vs 120 FPS). Time-based animation keeps all clients visually synchronized.
 
-``` text
-Music ON/OFF
-Sound Effects ON/OFF
-Volume
+---
+
+## 25. Crash Synchronization
+
+```
+Server side:
+  Round starts
+       |
+  Server records precise UTC start timestamp
+       |
+  Server broadcasts round_start + start_timestamp
+       |
+  Client receives round info
+       |
+  Client interpolates display from (now - start_timestamp)
+       |
+  Server declares CRASHED
+       |
+  Client accepts crash -- cannot extend round
 ```
 
-------------------------------------------------------------------------
+The client must never be able to extend a round after the server broadcasts `CRASHED`. Any client-side cash-out request received after the crash timestamp is rejected server-side regardless of network delay.
 
-# 24. Animation Timing
+---
 
-The game should use real elapsed time.
+## 26. Cash-Out Race Handling
 
-Example:
+This is a **critical correctness requirement**.
 
-``` python
-start_time = time.monotonic()
+**Scenario:**
 
-elapsed = time.monotonic() - start_time
-
-multiplier = multiplier_function(elapsed)
+```
+Server crash time  =  2.50x
+Client cash-out    =  2.52x  (sent 40ms late)
 ```
 
-Do not use:
+The server determines the valid result using its authoritative game clock.
 
-``` python
-multiplier += 0.01
-```
+**Transactional cash-out pseudocode:**
 
-on every frame because different devices have different frame rates.
+```sql
+BEGIN TRANSACTION;
 
-------------------------------------------------------------------------
+  SELECT * FROM rounds WHERE id = :round_id FOR UPDATE;
+  -- row-level lock prevents concurrent cash-outs
 
-# 25. Crash Synchronization
+  IF round.status != 'RUNNING' THEN
+    ROLLBACK; RETURN error("Round not active");
+  END IF;
 
-Server:
+  IF NOW() >= round.crash_time THEN
+    ROLLBACK; RETURN error("Crash already occurred");
+  END IF;
 
-``` text
-Round starts
-      ↓
-Server records start timestamp
-      ↓
-Client receives round information
-      ↓
-Client calculates display interpolation
-      ↓
-Server remains authoritative
-```
+  SELECT * FROM bets WHERE id = :bet_id FOR UPDATE;
 
-The client should never be able to extend a round after the server
-declares:
+  IF bet.status != 'PLACED' THEN
+    ROLLBACK; RETURN error("Bet already settled");
+  END IF;
 
-``` text
-CRASHED
-```
+  -- calculate authoritative payout
+  current_multiplier = calculate_multiplier(NOW() - round.started_at);
+  payout = bet.amount * current_multiplier;
 
-------------------------------------------------------------------------
+  UPDATE bets SET status='CASHED_OUT', cashout_multiplier=current_multiplier, payout=payout;
+  UPDATE wallets SET balance = balance + payout WHERE user_id = :user_id;
+  INSERT INTO transactions (...);
 
-# 26. Cash-Out Race Handling
-
-This is a critical part.
-
-Suppose:
-
-``` text
-Server crash = 2.50x
-Client sends cash-out = 2.52x
-```
-
-The server must determine the valid result using its authoritative game
-clock.
-
-The endpoint should be transactional.
-
-Concept:
-
-``` python
-BEGIN TRANSACTION
-
-lock round
-
-if round.status != "RUNNING":
-    reject
-
-if current_server_time >= crash_time:
-    reject
-
-record cashout
-
-update wallet
-
-mark bet as CASHED_OUT
-
-COMMIT
+COMMIT;
 ```
 
 This prevents double cash-outs and race-condition exploits.
 
-------------------------------------------------------------------------
+---
 
-# 27. Authentication
+## 27. Authentication
 
-For MVP:
+### MVP (V0.7)
 
-``` text
-Username
-Password
+```
+Username + Password
+Password hashed with Argon2id
+JWT access token (short-lived: 15 min)
+Refresh token (longer-lived: 7 days)
 ```
 
-Store only password hashes.
+### Production Hardening
 
-Recommended:
-
-``` text
-Argon2id
+```
+JWT access token + refresh token rotation
+Device fingerprinting
+Session management
+Concurrent session limits
+Suspicious login detection
 ```
 
-Do not store plaintext passwords.
+**Password storage:**
 
-For a later production version:
+```python
+from passlib.context import CryptContext
 
-``` text
-JWT access token
-Refresh token
-Device/session management
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+
+def hash_password(plain: str) -> str:
+    return pwd_context.hash(plain)
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return pwd_context.verify(plain, hashed)
 ```
 
-------------------------------------------------------------------------
+> [!CAUTION]
+> Never store plaintext passwords. Never log passwords or tokens.
 
-# 28. Local Development Mode
+---
 
-Before building the server:
+## 28. Local Development Mode
 
-``` text
-DEMO_MODE = True
+Before building the server, enable `DEMO_MODE`:
+
+```python
+# app/config.py
+DEMO_MODE = True  # set False to use real FastAPI backend
 ```
 
-This allows:
+**Demo Mode flow:**
 
-``` text
+```
 Kivy App
-   ↓
-Local Python Game Engine
-   ↓
-SQLite
+   |
+Local Python Game Engine  (backend/game/engine.py)
+   |
+SQLite (anti_gravity_dev.db)
 ```
 
-This is useful for building the UI quickly.
+This allows full UI development and testing without a running server.
 
-------------------------------------------------------------------------
+---
 
-# 29. Production Mode
+## 29. Production Mode
 
-``` text
+```
 Android APK
      |
+   HTTPS
+     |
+FastAPI on cloud server (Uvicorn + Gunicorn)
+     |
+PostgreSQL (managed cloud DB)
+     |
+Redis (optional -- for WebSocket pub/sub scaling)
+```
+
+Game engine runs **only** on the backend.
+
+---
+
+## 30. Admin Panel
+
+The Admin Panel is a **first-class part of the Anti-Gravity product**.
+
+It is a separate authenticated web dashboard connected to protected Python/FastAPI admin APIs. It is **not** the player Android application.
+
+### Admin Architecture
+
+```
+Admin Browser (Chrome / Firefox)
+      |
     HTTPS
-     |
-FastAPI
-     |
-PostgreSQL
+      |
+Protected FastAPI Admin APIs  (/api/admin/*)
+      |
++-----+------------------------+
+|                              |
+Database (PostgreSQL)      Audit System (audit_logs table)
 ```
 
-Game engine runs on the backend.
+### Admin Authentication and RBAC
 
-------------------------------------------------------------------------
+Implement:
 
-# 30. Admin Panel
+- Admin login with rate limiting and failed-login lockout
+- Secure Argon2id password hashing
+- JWT/session authentication with expiry
+- Token refresh and revocation
+- Role-based access control (RBAC)
+- Permission checks on every sensitive endpoint
+- Audit logging of all admin actions
+- Secret sanitization (never expose server seeds, JWT keys, DB credentials)
 
-Build a separate web dashboard.
+**Roles:**
 
-Admin features:
+| Role | Description |
+|---|---|
+| `SUPER_ADMIN` | Full access + role management |
+| `ADMIN` | Full operational access |
+| `OPERATOR` | Game + user management, no RBAC |
+| `AUDITOR` | Read-only audit + fairness access |
+| `SUPPORT` | Read-only user view |
 
-``` text
-Dashboard
-Users
-Rounds
-Game statistics
-Virtual-credit balances
-Game settings
-Server health
-Error logs
-Audit logs
-Maintenance mode
+> [!CAUTION]
+> Never put admin credentials, JWT signing secrets, database credentials, or server seeds inside the Android APK.
+
+### Admin Dashboard
+
+Live metrics:
+
+```
+Total Users          Active Users      Online Users
+Current Round #      Multiplier        Players in Round
+Games Today          Credits in Circ.  Cash-out Rate
+API Health           WS Connections    DB Health
+Recent Security Events
 ```
 
-Important:
+### User Management
 
-The admin interface must not contain a hidden mechanism for manually
-changing an individual round result.
+Authorized administrators can:
 
-Game outcomes should remain generated by the game engine.
+- Search and filter users
+- View full profile
+- View account status and history
+- Enable / disable / ban accounts
+- Review login and session activity
+- View virtual-credit balance
+- View game and transaction history
+- Review security events associated with account
 
-------------------------------------------------------------------------
+### Virtual-Credit Management
 
-# 31. Analytics
+Provide:
 
-Track:
+- View current wallet balance
+- View full transaction history
+- Add virtual test/demo credits (with mandatory reason)
+- Remove virtual credits where authorized (with mandatory reason)
+- Before/after balance recorded on every adjustment
+- Immutable audit record generated automatically
 
-``` text
-DAU
-MAU
-Games played
+> [!WARNING]
+> Never add real-money deposits, withdrawals, payments, cryptocurrency wagering, or cash prizes.
+
+### Game / Round Management
+
+Display:
+
+- Current round ID, status, multiplier, crash multiplier
+- Start/end timestamps
+- Number of bets placed / cashed out
+- Virtual credits wagered / paid out
+- Historical round list with filters
+
+> [!IMPORTANT]
+> **Critical rule:** The Admin Panel must **NOT** contain any mechanism — hidden or otherwise — for manually changing an individual round's authoritative crash result. Outcomes remain controlled exclusively by the server game engine and fairness system.
+
+### Game Configuration
+
+Authorized admins can manage:
+
+```
+Minimum virtual bet
+Maximum virtual bet
+Starting virtual-credit balance for new players
+Round betting window duration
+House edge (SUPER_ADMIN only)
+Maintenance mode (ON / OFF)
+```
+
+Every change must be: permission-checked → validated → saved → audited.
+
+### Fairness Verification
+
+Display, where authorized:
+
+```
+Round ID
+Commitment hash (published pre-round)
+Server seed (revealed post-round)
+Crash result
+Verification status (PASS / FAIL)
+Audit metadata
+```
+
+Unrevealed server seeds for active/future rounds must remain protected.
+
+### Audit Logs
+
+Record:
+
+```
+Admin login / logout
+Failed admin login attempts
+User status changes
+Virtual-credit adjustments
+Configuration changes
+Maintenance mode changes
+Security events
+All administrative API actions
+Fairness verification actions
+```
+
+Audit records are **append-only / immutable** — no delete or update from the UI.
+
+### System Health
+
+Display:
+
+```
+API health (response time, error rate)
+Database health (connection count, latency)
+WebSocket connections (active count)
+Game-loop status (running / stopped)
+Background task status
+Recent exceptions log
+```
+
+### Maintenance Mode
+
+When enabled:
+
+1. New bets are blocked.
+2. Any active round is allowed to finish naturally.
+3. Players see a maintenance notice.
+4. Admins retain full panel access.
+
+### Complete Admin API Reference
+
+```http
+POST   /api/admin/auth/login
+POST   /api/admin/auth/logout
+
+GET    /api/admin/dashboard
+
+GET    /api/admin/users
+GET    /api/admin/users/{user_id}
+PATCH  /api/admin/users/{user_id}/status
+GET    /api/admin/users/{user_id}/history
+GET    /api/admin/users/{user_id}/transactions
+
+GET    /api/admin/rounds
+GET    /api/admin/rounds/{round_id}
+
+GET    /api/admin/transactions
+POST   /api/admin/wallet-adjustments
+
+GET    /api/admin/audit-logs
+
+GET    /api/admin/fairness/{round_id}
+POST   /api/admin/fairness/{round_id}/verify
+
+GET    /api/admin/system/health
+GET    /api/admin/system/metrics
+
+GET    /api/admin/settings
+PATCH  /api/admin/settings
+```
+
+### Admin Testing Checklist
+
+- [ ] Admin authentication (valid / invalid credentials)
+- [ ] RBAC — role permissions enforced
+- [ ] Unauthorized access returns 403
+- [ ] User isolation (admin can't access other admin's session)
+- [ ] Wallet-adjustment authorization (correct role required)
+- [ ] Audit record created for every sensitive action
+- [ ] Audit records cannot be deleted via UI
+- [ ] Configuration validation rejects bad values
+- [ ] Maintenance mode blocks new bets
+- [ ] Fairness verification returns correct PASS / FAIL
+- [ ] Server seeds protected for active rounds
+- [ ] Rate limiting on admin login endpoint
+- [ ] Expired / invalid admin tokens rejected
+
+---
+
+## 31. Analytics
+
+Track (server-side, privacy-respecting):
+
+```
+DAU / MAU
+Games played per day
 Average session duration
-Average rounds/session
-Average virtual credits
-Cash-out distribution
-Crash distribution
-App crashes
-API latency
-WebSocket disconnects
+Average rounds per session
+Average virtual credits wagered
+Cash-out multiplier distribution
+Crash multiplier distribution
+Win rate distribution
+App crash rate (client-side error reports)
+API latency percentiles (p50, p95, p99)
+WebSocket disconnect rate
 ```
 
-Do not collect unnecessary personal information.
+> [!NOTE]
+> Do not collect unnecessary personal information. Analytics must be compliant with applicable privacy regulations even for a virtual game.
 
-------------------------------------------------------------------------
+---
 
-# 32. Responsible Game Design
+## 32. Responsible Game Design
 
-Because crash mechanics can encourage repetitive play, add:
+Because crash mechanics can encourage repetitive play, implement:
 
-``` text
-Session timer
-Break reminder
-Daily play statistics
-Virtual-credit-only economy
-No real-money deposits
-No real-money withdrawals
+```
+Session timer          -- shows how long player has been playing
+Break reminder         -- prompts a break after N minutes
+Daily play statistics  -- credits wagered, won, lost today
+Virtual-credit economy -- no real money at risk
 ```
 
-Avoid manipulative mechanics such as secretly changing outcomes based on
-a player's balance or behavior.
+**Prohibited mechanics:**
 
-------------------------------------------------------------------------
+- Secretly adjusting outcomes based on a player's balance or behavior
+- Hiding session duration from the player
+- Loot-box-style disguised monetization
 
-# 33. Testing Strategy
+---
 
-## Unit Tests
+## 33. Testing Strategy
 
-Test:
+### Unit Tests
 
-``` text
-Multiplier calculation
-Crash calculation
-Fairness verification
-Wallet calculations
-Cash-out validation
-State transitions
+Test in isolation:
+
+```
+Multiplier calculation at various elapsed times
+Crash point derivation from random seed
+FairnessEngine.verify_result() correctness
+Wallet integer arithmetic (bet / payout / adjustment)
+Cash-out validation logic
+State machine transition rules
 ```
 
-## Integration Tests
+### Integration Tests
 
-Test:
+Test component interactions:
 
-``` text
-App → API
-API → Database
-WebSocket → Client
-Round → Bet → Cash-out
+```
+App --> REST API (auth, game join, cash-out)
+API --> Database (round creation, bet recording, wallet update)
+WebSocket --> Client (multiplier stream, crash event, reconnect)
+Full round lifecycle: join --> bet --> cash-out --> balance update
 ```
 
-## Stress Tests
+### Stress / Load Tests
 
-Simulate:
+Simulate concurrent users:
 
-``` text
-100 users
-500 users
-1,000 users
+```
+100 concurrent users   -- baseline
+500 concurrent users   -- target MVP capacity
+1,000 concurrent users -- stretch goal
 ```
 
 Measure:
 
-``` text
-CPU
-RAM
-database latency
-WebSocket latency
+```
+CPU utilization
+RAM usage
+Database query latency
+WebSocket message latency
+Cash-out success rate under load
 ```
 
-------------------------------------------------------------------------
+---
 
-# 34. Security Tests
+## 34. Security Tests
 
-Test:
+Every failure scenario must be **rejected server-side**:
 
-``` text
-Duplicate cash-out
-Replay requests
-Invalid round ID
-Invalid user ID
-Modified multiplier
-Modified payout
-Negative bet
-Huge bet
-Expired token
-Unauthorized admin request
+| Attack | Expected Result |
+|---|---|
+| Duplicate cash-out | 409 Conflict |
+| Replay request (old JWT) | 401 Unauthorized |
+| Invalid round ID | 404 Not Found |
+| Invalid user ID | 403 Forbidden |
+| Modified multiplier in body | Ignored — server uses authoritative value |
+| Modified payout in body | Ignored — server calculates payout |
+| Negative bet amount | 422 Unprocessable Entity |
+| Bet > maximum_bet | 422 Unprocessable Entity |
+| Expired JWT | 401 Unauthorized |
+| Unauthorized admin endpoint | 403 Forbidden |
+| SQL injection in input | 422 / sanitized by Pydantic |
+| WebSocket message flood | Rate-limited + disconnected |
+
+---
+
+## 35. Offline Handling
+
+When the network disconnects during a round:
+
+```
+UI overlay:
+  WARNING: DISCONNECTED
+  Reconnecting... (attempt 3/5)
 ```
 
-Every failure should be rejected server-side.
+**Rules:**
 
-------------------------------------------------------------------------
+- Do **not** assume the player successfully cashed out.
+- The server's stored state remains authoritative.
+- Client must not update wallet balance until server confirms.
 
-# 35. Offline Handling
+**On reconnection:**
 
-If internet disconnects during a round:
-
-``` text
-DISCONNECTED
-Reconnecting...
+```python
+async def on_reconnect():
+    round_data = await api.get_current_round()
+    balance    = await api.get_balance()
+    last_tx    = await api.get_latest_transaction()
+    sync_ui(round_data, balance, last_tx)
 ```
 
-Do not assume that the player successfully cashed out.
+**Reconnect backoff strategy:**
 
-The server's stored state remains authoritative.
-
-After reconnection:
-
-``` text
-GET current round
-GET player balance
-GET latest transaction
+```
+Attempt 1 --> wait 1s
+Attempt 2 --> wait 2s
+Attempt 3 --> wait 4s
+Attempt 4 --> wait 8s
+Attempt 5 --> wait 16s --> show "Check your connection" message
 ```
 
-Then synchronize the UI.
+---
 
-------------------------------------------------------------------------
+## 36. Error Handling
 
-# 36. Error Handling
+Show **user-friendly** messages on the UI:
 
-Use user-friendly messages.
+| Technical Error | User Message |
+|---|---|
+| `WebSocketException` | "Connection lost. Trying to reconnect..." |
+| `HTTPError 503` | "Server is temporarily unavailable." |
+| `HTTPError 401` | "Session expired. Please log in again." |
+| `TimeoutError` | "Request timed out. Please try again." |
 
-Example:
+Log technical details (stack traces, error codes) **separately** in the backend log — never shown to the player.
 
-``` text
-Connection lost.
-Trying to reconnect...
+---
+
+## 37. Logging
+
+**Backend log levels:**
+
+| Level | Use |
+|---|---|
+| `INFO` | Normal operations, round start/end |
+| `WARNING` | Unexpected but recoverable events |
+| `ERROR` | Exceptions, failed DB transactions |
+| `SECURITY` | Auth failures, rate limit hits, suspicious requests |
+| `AUDIT` | All sensitive admin actions (separate audit_logs table) |
+
+**Never log:**
+
+```
+password (plain or hashed)
+JWT signing secret
+Database connection string
+Server seed (before round end)
+Private tokens / session keys
 ```
 
-Instead of:
+---
 
-``` text
-WebSocketException: Connection reset by peer
+## 38. API Security
+
+**Mandatory for all API endpoints:**
+
+```
+HTTPS               -- all production traffic
+JWT bearer tokens   -- authenticate every request
+Rate limiting       -- per IP + per user
+Input validation    -- Pydantic v2 strict mode
+CORS configuration  -- whitelist known origins only
+Secure headers      -- HSTS, X-Frame-Options, CSP
+Request IDs         -- UUID per request for tracing
+Audit logs          -- sensitive operations logged
 ```
 
-Log technical errors separately.
+**Development:**
 
-------------------------------------------------------------------------
-
-# 37. Logging
-
-Backend logs:
-
-``` text
-INFO
-WARNING
-ERROR
-SECURITY
-AUDIT
+```
+http://localhost:8000
+ws://localhost:8000/ws/game
 ```
 
-Never log:
+**Production:**
 
-``` text
-password
-authentication secrets
-private tokens
+```
+https://api.antigravity.yourdomain.com
+wss://api.antigravity.yourdomain.com/ws/game
 ```
 
-------------------------------------------------------------------------
+Use your actual registered domain. Do not hard-code example domains.
 
-# 38. API Security
+---
 
-Use:
+## 39. Windows + Physical Android Phone Workflow
 
-``` text
-HTTPS
-JWT
-Rate limiting
-Input validation
-CORS configuration
-Secure headers
-Request IDs
-Audit logs
+The developer works on a **Windows laptop** and uses a **physical Android phone** as the primary Android test device.
+
+### Windows Setup
+
+Required tools:
+
+| Tool | Purpose |
+|---|---|
+| Python 3.11+ | Frontend + backend development |
+| Git | Version control |
+| Antigravity IDE | Primary development environment |
+| Android Studio | SDK Manager + Logcat |
+| Android SDK Platform-Tools | ADB |
+
+Android Studio provides the SDK/Platform-Tools and Logcat support. The Anti-Gravity application remains Python/Kivy/KivyMD and is **not** rewritten as Kotlin/Java.
+
+### Phone Debugging
+
+On the phone:
+
+```
+Settings --> Developer Options --> ON
+USB Debugging                  --> ON
+USB connection mode            --> File Transfer (MTP)
 ```
 
-For development:
+Verify device is detected:
 
-``` text
-http://localhost
+```powershell
+adb devices
 ```
 
-For production:
+Expected output:
 
-``` text
-https://api.antigravity.example
+```
+List of devices attached
+<device-id>    device
 ```
 
-Use your actual domain when deployed.
+Install a debug APK:
 
-------------------------------------------------------------------------
-
-# 39. Build Process
-
-## Development
-
-``` text
-Python
-   ↓
-Kivy
-   ↓
-Local testing
+```powershell
+adb -s <device-id> install "path\to\anti-gravity-debug.apk"
 ```
 
-## Android
+View live logs:
 
-``` text
-Python
-   ↓
-Kivy
-   ↓
-Buildozer
-   ↓
-Android APK
+```powershell
+adb -s <device-id> logcat | Select-String "python"
 ```
 
-Typical commands:
+### Local FastAPI Testing (Phone to Laptop)
 
-``` bash
-buildozer init
+**Key rule:** Android's `localhost` / `127.0.0.1` refers to the **phone itself**, not the laptop.
+
+Setup:
+
+1. Connect phone and laptop to the same trusted Wi-Fi network.
+2. Run FastAPI: `uvicorn main:app --host 0.0.0.0 --port 8000`
+3. Find laptop's LAN IP: run `ipconfig` in PowerShell, look for **IPv4 Address**
+4. Configure the Android app to use the laptop's LAN IP.
+
+```python
+# app/config.py
+import os
+
+if os.getenv("ANDROID_ARGUMENT"):
+    # Running on Android -- use LAN IP
+    API_BASE_URL = os.getenv("API_BASE_URL", "http://192.168.x.x:8000")
+else:
+    # Running on Windows dev machine
+    API_BASE_URL = "http://localhost:8000"
 ```
 
-Then configure:
+Verify connectivity:
 
-``` text
-buildozer.spec
+```
+http://<laptop-LAN-IP>:8000/api/health
 ```
 
-Finally:
+> [!WARNING]
+> Do not expose the development FastAPI server to the public internet. Only use it on a trusted private LAN.
 
-``` bash
+### APK Build (No Ubuntu / WSL2 Required)
+
+```
+Windows Laptop
+      |
+      v
+GitHub (push code)
+      |
+      v
+GitHub Actions Linux Runner
+      |
+      v
+Buildozer + python-for-android
+      |
+      v
+Debug APK artifact
+      |
+      v
+Download to Windows
+      |
+      v
+ADB install to physical phone
+```
+
+---
+
+## 40. Build Process
+
+### Local Development Testing
+
+```
+Python 3.11+
+   |
+Kivy (desktop mode)
+   |
+python app/main.py
+```
+
+### Android APK (via GitHub Actions)
+
+```
+python app/main.py  <-- test locally first
+   |
+git push origin main
+   |
+GitHub Actions runner (Ubuntu)
+   |
+pip install buildozer
+   |
 buildozer android debug
+   |
+Download APK artifact from Actions
+   |
+adb install anti-gravity-debug.apk
 ```
 
-For release:
+### Buildozer Commands Reference
 
-``` bash
+```bash
+# Initialize spec file (first time only)
+buildozer init
+
+# Debug build (via GitHub Actions)
+buildozer android debug
+
+# Release build (requires signing key)
 buildozer android release
 ```
 
-A release APK/AAB must be signed with your own signing key.
+> [!IMPORTANT]
+> A **release APK/AAB** must be signed with your own keystore file. Never commit the keystore to Git. Use GitHub Actions secrets to supply it during the release build.
 
-------------------------------------------------------------------------
+---
 
-# 40. Buildozer Configuration
+## 41. Buildozer Configuration
 
-Important settings:
+**`buildozer.spec` key settings:**
 
-``` text
+```ini
+[app]
 title = Anti-Gravity
 package.name = antigravity
-package.domain = org.yourcompany
-source.include_exts = py,kv,png,jpg,jpeg,wav,mp3,json
-requirements = python3,kivy,kivymd,requests,websocket-client
+package.domain = com.yourstudio.antigravity
+
+source.dir = .
+source.include_exts = py,kv,png,jpg,jpeg,gif,wav,mp3,ogg,json,ttf
+
+version = 0.1.0
+
+requirements = python3==3.11,kivy==2.3.0,kivymd==1.2.0,requests,websocket-client,argon2-cffi
+
 orientation = portrait
 fullscreen = 0
+
+android.minapi = 24
+android.targetapi = 34
+android.ndk = 25b
+android.sdk = 34
+
+android.permissions = INTERNET,VIBRATE
+
+[buildozer]
+log_level = 2
 ```
 
-Exact dependency versions should be locked after testing.
+> [!NOTE]
+> Lock exact dependency versions **after** a successful test build. Avoid floating versions in `buildozer.spec` for production.
 
-------------------------------------------------------------------------
+---
 
-# 41. Antigravity Development Workflow
+## 42. CI/CD Pipeline — GitHub Actions
 
-Use Antigravity as the development assistant.
+**File:** `.github/workflows/build_apk.yml`
 
-## Phase 1
+```yaml
+name: Build Android APK
 
-Give it:
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
 
-``` text
-Create the Anti-Gravity Python/Kivy project structure.
+jobs:
+  build-apk:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git zip unzip openjdk-17-jdk \
+            libffi-dev libssl-dev libsdl2-dev \
+            libsdl2-image-dev libsdl2-mixer-dev \
+            libsdl2-ttf-dev libportmidi-dev \
+            libswscale-dev libavformat-dev libavcodec-dev
+
+      - name: Install Buildozer
+        run: pip install buildozer cython
+
+      - name: Build Debug APK
+        run: buildozer android debug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: anti-gravity-debug-apk
+          path: bin/*.apk
+          retention-days: 14
 ```
 
-## Phase 2
+---
 
-Implement:
+## 43. Antigravity Development Workflow
 
-``` text
-Main menu
-Game screen
-Multiplier
-Spider animation
-Virtual wallet
+Use Antigravity as the primary development assistant for all phases.
+
+### Phase 1 — Project Structure
+
+```
+Create the Anti-Gravity Python/Kivy project structure per Section 18.
 ```
 
-## Phase 3
+### Phase 2 — Kivy UI
 
-Implement:
-
-``` text
-FastAPI backend
-SQLite
-Game engine
+```
+Implement: main menu, splash, game screen, multiplier widget,
+spider animation widget, virtual wallet display.
 ```
 
-## Phase 4
+### Phase 3 — Local Game Engine
 
-Implement:
-
-``` text
-WebSocket
-Server synchronization
-Cash-out validation
+```
+Implement: FastAPI backend skeleton, SQLite database,
+FairnessEngine, GameStateMachine, multiplier function,
+Demo Mode for local testing.
 ```
 
-## Phase 5
+### Phase 4 — Backend Integration
 
-Implement:
-
-``` text
-Fairness system
-History
-Profile
-Settings
+```
+Implement: REST endpoints, WebSocket server,
+server-authoritative game loop, cash-out validation.
 ```
 
-## Phase 6
+### Phase 5 — Fairness + History
 
-Implement:
-
-``` text
-Tests
-Security
-Error handling
+```
+Implement: seed commitment, HMAC derivation, crash generation,
+fairness verification API, round history, profile, settings.
 ```
 
-## Phase 7
+### Phase 6 — Security Hardening
 
-Build:
-
-``` text
-APK
+```
+Implement: Argon2id passwords, JWT, rate limiting,
+input validation, CORS, secure headers, audit sanitization.
 ```
 
-------------------------------------------------------------------------
+### Phase 7 — Admin Panel
 
-# 42. Recommended Development Order
-
-Do not build everything simultaneously.
-
-### Sprint 1 --- UI
-
-``` text
-Splash
-Home
-Game
-History
-Settings
+```
+Implement: admin auth + RBAC, dashboard, user management,
+wallet adjustments, round monitoring, audit logs, system health.
 ```
 
-### Sprint 2 --- Local Game
+### Phase 8 — Android Build
 
-``` text
-Multiplier
-Spider
-Crash
-Cash-out
-Virtual wallet
+```
+Configure buildozer.spec, set up GitHub Actions workflow,
+build debug APK, install via ADB, test on physical phone.
 ```
 
-### Sprint 3 --- Backend
+---
 
-``` text
-FastAPI
-Database
-Authentication
-Game API
+## 44. Recommended Development Order
+
+Run the **full test suite** after every sprint. Test Android-specific changes on the physical phone after Sprint 8.
+
+### Sprint 1 — Python / Kivy UI Foundation
+
+```
+Splash screen
+Home / main menu
+Game screen (static, no logic)
+History screen
+Profile screen
+Settings screen
+Tutorial / How to Play screen
 ```
 
-### Sprint 4 --- Real-Time
+### Sprint 2 — Local Virtual Game
 
-``` text
-WebSocket
-Synchronization
-Server game engine
+```
+Multiplier calculation (local)
+Spider animation (local)
+Crash generation (local, using FairnessEngine)
+Cash-out button logic
+Virtual wallet (local SQLite)
+Local GameStateMachine
+Demo Mode working end-to-end
 ```
 
-### Sprint 5 --- Fairness
+### Sprint 3 — Python FastAPI Backend
 
-``` text
-Seed
-Hash
-Crash generation
-Verification
+```
+FastAPI project structure
+SQLite via SQLAlchemy
+User registration + login (Argon2id + JWT)
+Player API endpoints
+Game API endpoints
+Wallet API endpoints
+Database migrations (Alembic)
 ```
 
-### Sprint 6 --- Security
+### Sprint 4 — Real-Time Gameplay
 
-``` text
-Authentication
-Rate limiting
-Validation
-Transactions
-Audit logs
+```
+WebSocket server (/ws/game)
+Server-authoritative game loop
+Live multiplier broadcast
+Crash event broadcast
+Cash-out validation (transactional)
+Kivy WebSocket client connected to backend
 ```
 
-### Sprint 7 --- Testing
+### Sprint 5 — Fairness and Audit
 
-``` text
-Unit
-Integration
-Load
-Android device
+```
+FairnessEngine (seed, hash, HMAC derivation)
+Crash point generation using FairnessEngine
+Fairness verification API
+Round history stored with seed data
+Audit log table + writes
 ```
 
-### Sprint 8 --- APK
+### Sprint 6 — Security
 
-``` text
-Buildozer
-Debug APK
-Release APK
-Signing
-Installation
+```
+JWT access + refresh token rotation
+Rate limiting (slowapi or custom middleware)
+Input validation hardening
+Authorization checks on all endpoints
+Database transaction safety review
+Security headers middleware
+Audit log sanitization (no secrets logged)
 ```
 
-------------------------------------------------------------------------
+### Sprint 7 — Performance and Stability
 
-# 43. MVP Acceptance Criteria
-
-The MVP is complete when:
-
--   App launches without crashing.
--   User can create/login to a local account.
--   User receives virtual credits.
--   User can select a virtual bet.
--   A round starts.
--   Multiplier increases smoothly.
--   Spider animation follows the multiplier.
--   Crash occurs at the server-generated result.
--   Cash-out works before crash.
--   Cash-out after crash is rejected.
--   Wallet updates exactly once.
--   Round history is saved.
--   Fairness verification works.
--   Reconnection works.
--   Invalid requests are rejected.
--   APK installs on Android.
--   Game works on multiple Android screen sizes.
-
-------------------------------------------------------------------------
-
-# 44. Suggested First Version
-
-Keep Version 1 simple:
-
-``` text
-ANTI-GRAVITY
-
-[ PLAY ]
-
-Virtual Balance:
-10,000
-
-Bet:
-[ - ] 100 [ + ]
-
-          1.00x
-           🕷️
-
-       [ CASH OUT ]
-
-Recent:
-1.24x | 2.11x | 5.31x | 1.04x
+```
+Database query optimization (indexes)
+WebSocket connection pool management
+Memory / resource cleanup in game loop
+Game loop stability under sustained load
+Load test (pytest-asyncio + locust)
+API latency profiling
+Android-side performance review (FPS, memory)
 ```
 
-Do not add unnecessary features until this works perfectly.
+### Sprint 8 — Android Compatibility and Debug APK
 
-------------------------------------------------------------------------
-
-# 45. Version Roadmap
-
-## V0.1
-
-``` text
-UI prototype
+```
+Environment-aware config (demo vs. real backend)
+LAN IP configuration for physical phone testing
+buildozer.spec configuration and dependency lock
+GitHub Actions APK build workflow
+Debug APK built and downloaded
+ADB install to physical phone
+Logcat debugging session
+Real-device test coverage
 ```
 
-## V0.2
+### Sprint 9 — Admin Panel
 
-``` text
-Local game engine
+```
+Admin authentication + JWT
+RBAC middleware
+Admin dashboard (live metrics)
+User management CRUD
+Wallet adjustment with audit
+Round monitoring
+Game settings management
+Fairness verification UI
+Audit log viewer (read-only)
+System health display
+Maintenance mode
+Admin API integration tests
+Admin UI tests
 ```
 
-## V0.3
+> [!IMPORTANT]
+> The Admin Panel must **never** bypass server-authoritative game outcomes.
 
-``` text
-Virtual wallet
+### Sprint 10 — Final Release
+
+```
+Production environment configuration
+PostgreSQL migration from SQLite
+Production API / WebSocket URLs
+Android signing keystore setup
+Release APK / AAB build
+Final security review
+Final regression test suite
+Production deployment (cloud server)
+Monitoring + alerting setup
+Backup and recovery procedures
 ```
 
-## V0.4
+---
 
-``` text
-FastAPI backend
+## 45. MVP Acceptance Criteria
+
+The MVP is complete when **all** of the following pass:
+
+**App Lifecycle**
+- [ ] App launches on Android without crashing.
+- [ ] Splash screen loads and transitions to home screen.
+
+**Account**
+- [ ] User can register a new account.
+- [ ] User can log in to an existing account.
+- [ ] User receives starting virtual-credit balance.
+
+**Game Flow**
+- [ ] User can select a virtual bet amount.
+- [ ] A round starts with server-generated round ID and seed hash.
+- [ ] Multiplier increases smoothly and continuously.
+- [ ] Spider animation follows the multiplier value.
+- [ ] Crash occurs at the server-generated crash point.
+- [ ] Cash-out works correctly before the crash.
+- [ ] Cash-out after crash is **rejected** by the server.
+- [ ] Wallet updates exactly **once** per settled bet.
+
+**Data**
+- [ ] Round history is stored and displayed.
+- [ ] Fairness verification returns correct result for past rounds.
+
+**Network**
+- [ ] Reconnection after disconnect works correctly.
+- [ ] Invalid / malformed API requests are rejected.
+
+**Android**
+- [ ] APK installs on physical Android test phone via ADB.
+- [ ] Game works on multiple Android screen sizes.
+- [ ] Android app connects to development FastAPI server over LAN.
+- [ ] ADB and Logcat successfully diagnose Android runtime issues.
+
+**Admin Panel**
+- [ ] Admin login and RBAC work correctly.
+- [ ] All admin actions generate audit log entries.
+- [ ] Admin Panel **cannot** alter an individual authoritative game outcome.
+
+---
+
+## 46. Suggested First Version
+
+Keep Version 1 (V0.1) simple. Do not add features until core loop is solid:
+
+```
++----------------------------------+
+|         ANTI-GRAVITY             |
+|                                  |
+|       [ PLAY ]                   |
+|                                  |
+| Virtual Balance: 10,000          |
+|                                  |
+| Bet:  [ - ]  100  [ + ]         |
+|                                  |
+|         1.00x                    |
+|          [spider]                |
+|                                  |
+|       [ CASH OUT ]               |
+|                                  |
+| Recent: 1.24x | 2.11x | 5.31x   |
++----------------------------------+
 ```
 
-## V0.5
+---
 
-``` text
-WebSocket synchronization
+## 47. Version Roadmap
+
+| Version | Milestone |
+|---|---|
+| **V0.1** | UI prototype (Kivy screens, no logic) |
+| **V0.2** | Local game engine (demo mode) |
+| **V0.3** | Virtual wallet (local SQLite) |
+| **V0.4** | FastAPI backend + authentication |
+| **V0.5** | WebSocket real-time synchronization |
+| **V0.6** | Fairness verification system |
+| **V0.7** | Authentication hardening (JWT + Argon2id) |
+| **V0.8** | Admin dashboard (RBAC + audit) |
+| **V0.9** | Testing + performance optimization |
+| **V1.0** | Production-ready virtual-credit APK |
+
+---
+
+## 48. Final Architecture
+
+```
+         +-------------------------------+
+         |        ANDROID APK           |
+         |      KIVY / KIVYMD           |
+         +----------+--------------------+
+                    |
+         +----------+---------+
+         |                    |
+      REST API            WebSocket
+         |                    |
+         +----------+---------+
+                    |
+         +----------+--------------------+
+         |          FASTAPI              |
+         +---------+---------+----------+
+                   |         |
+           GAME ENGINE   AUTH SYSTEM
+           FairnessEngine   JWT + Argon2id
+           StateMachine     RBAC
+           MultiplierEngine
+                   |         |
+                   +---------+
+                       |
+         +-------------+------------------+
+         |           DATABASE             |
+         |   SQLite (dev)                 |
+         |   PostgreSQL (prod)            |
+         +--------------------------------+
 ```
 
-## V0.6
+**Game engine flow:**
 
-``` text
-Fairness verification
 ```
-
-## V0.7
-
-``` text
-Authentication
-```
-
-## V0.8
-
-``` text
-Admin dashboard
-```
-
-## V0.9
-
-``` text
-Testing + optimization
-```
-
-## V1.0
-
-``` text
-Production-ready virtual-credit APK
-```
-
-------------------------------------------------------------------------
-
-# 46. Final Architecture
-
-``` text
-                 ANDROID APK
-                     |
-             KIVY / KIVYMD
-                     |
-       +-------------+-------------+
-       |                           |
-   REST API                    WebSocket
-       |                           |
-       +-------------+-------------+
-                     |
-                  FASTAPI
-                     |
-          +----------+----------+
-          |                     |
-      GAME ENGINE           AUTH SYSTEM
-          |                     |
-          +----------+----------+
-                     |
-                 DATABASE
-                     |
-               PostgreSQL
-```
-
-Game engine:
-
-``` text
-Seed
- ↓
-Hash
- ↓
-Round
- ↓
-Crash point
- ↓
-Multiplier timeline
- ↓
-Server state
- ↓
-Cash-out validation
- ↓
+Secure random seed
+       |
+SHA256 commitment hash  (published pre-round)
+       |
+HMAC-SHA256 round randomness
+       |
+Crash point calculation
+       |
+Multiplier timeline (server authoritative)
+       |
+Server game state --> broadcast via WebSocket
+       |
+Cash-out validation (transactional DB)
+       |
 Wallet transaction
- ↓
-History
+       |
+Round history + seed reveal
 ```
 
-------------------------------------------------------------------------
+---
 
-# 47. Antigravity Build Prompt
+## 49. Antigravity Build Prompt
 
-Use the following as the initial project prompt in Antigravity:
+Use the following as the initial implementation prompt in Antigravity:
 
-``` text
+```
 Build a complete Python/Kivy Android application called "Anti-Gravity".
 
 It is a virtual-credit crash arcade game inspired by the general crash-game mechanic.
 
-The visual theme is a futuristic spider climbing/flying upward instead of an airplane.
+The visual theme is a futuristic cyber spider climbing upward through a deep-space environment.
 
 Requirements:
 
-1. Python + Kivy/KivyMD frontend.
-2. FastAPI Python backend.
-3. SQLite for development.
-4. PostgreSQL-ready architecture.
-5. WebSocket real-time game updates.
-6. Server-authoritative game engine.
-7. Virtual-credit wallet only.
-8. No deposits, withdrawals, cryptocurrency, or real-money gambling.
-9. Multiplier starts at 1.00x and continuously increases.
-10. A server-generated crash point ends the round.
+1.  Python + Kivy/KivyMD frontend.
+2.  FastAPI Python backend.
+3.  SQLite for development (Demo Mode).
+4.  PostgreSQL-ready architecture.
+5.  WebSocket real-time game updates (/ws/game).
+6.  Server-authoritative game engine (multiplier, crash, payout).
+7.  Virtual-credit wallet only -- no real money.
+8.  No deposits, withdrawals, cryptocurrency, or real-money gambling.
+9.  Multiplier starts at 1.00x and continuously increases.
+10. A server-generated crash point ends each round.
 11. Player can cash out before the crash.
-12. Server validates every cash-out.
-13. Use database transactions for wallet changes.
-14. Implement a cryptographically secure, auditable fairness mechanism.
-15. Store round history.
-16. Add user authentication.
-17. Add profile screen.
-18. Add settings.
-19. Add sound effects.
-20. Add futuristic spider animation.
-21. Add reconnect handling.
+12. Server validates every cash-out inside a database transaction.
+13. Use database transactions and row locking for wallet changes.
+14. Implement a cryptographically secure, auditable FairnessEngine (HMAC-SHA256).
+15. Store round history with seed reveal post-round.
+16. Add user authentication (Argon2id passwords, JWT tokens).
+17. Add profile screen with stats.
+18. Add settings screen (audio, display, responsible play).
+19. Add sound effects using Kivy SoundLoader.
+20. Add futuristic spider animation driven by server multiplier.
+21. Add reconnect handling with exponential backoff.
 22. Add comprehensive unit and integration tests.
-23. Create a clean modular project structure.
+23. Create a clean modular project structure per the spec.
 24. Prepare the project for Android APK generation using Buildozer.
 25. Never trust client-side multiplier, balance, payout, or crash state.
-26. Add clear comments and documentation.
-27. Make the UI responsive for Android phones.
-28. Use original Anti-Gravity visual assets and branding rather than copying Aviator assets.
+26. Add clear comments and docstrings throughout.
+27. Make the UI responsive for Android phones (portrait, multiple screen sizes).
+28. Use original Anti-Gravity visual assets -- do not copy Aviator assets.
+29. Use Python for both the Android frontend and FastAPI backend.
+30. The primary developer machine is Windows.
+31. Use Antigravity IDE as the primary development environment.
+32. Prepare the Android app for physical-phone debugging using ADB.
+33. Prepare GitHub Actions + Buildozer workflow for APK builds
+    (Ubuntu/WSL2 not required on Windows laptop).
+34. Build a separate authenticated web Admin Panel with RBAC and
+    protected FastAPI admin APIs.
+35. Give authorized administrators operational control over users,
+    virtual credits, game settings, maintenance mode, audits,
+    fairness verification, and system health.
+36. Never give the Admin Panel any mechanism to alter an individual
+    authoritative round result.
+37. Audit all sensitive administrative actions in an append-only table.
 
-First create the project structure.
-
-Then implement the UI.
-
-Then implement the local game engine.
-
-Then implement the backend.
-
-Then connect the frontend to the backend.
-
-Then implement fairness verification.
-
-Then implement tests.
-
-Finally prepare buildozer.spec and Android build instructions.
+Implementation order:
+  1. Project structure (Section 18 of the plan)
+  2. Kivy UI (Sprint 1)
+  3. Local game engine + Demo Mode (Sprint 2)
+  4. FastAPI backend (Sprint 3)
+  5. WebSocket + server game loop (Sprint 4)
+  6. Fairness verification (Sprint 5)
+  7. Security hardening (Sprint 6)
+  8. Admin Panel (Sprint 9)
+  9. Tests (throughout each sprint)
+  10. buildozer.spec + GitHub Actions APK build (Sprint 8)
 
 Do not skip testing between stages.
 ```
 
-------------------------------------------------------------------------
+---
 
-# 48. Important Implementation Principle
+## 50. Important Implementation Principle
 
-The most important architectural rule is:
-
-> **The phone displays the game; the server controls the game.**
+> **The phone displays the game. The server controls the game.**
 
 Never allow the Android client to decide:
 
-``` text
+```
 Crash point
-Payout
+Payout amount
 Wallet balance
-Cash-out success
+Cash-out success or failure
 Round result
 ```
 
-Those must be authoritative server operations.
+Those are **authoritative server operations**, always.
 
-------------------------------------------------------------------------
+---
 
-# 49. Definition of Done
+## 51. Definition of Done
 
-Anti-Gravity V1 is ready for release when:
+Anti-Gravity V1 is ready for release when **every item** below is complete:
 
-``` text
-[✓] Python project
-[✓] Kivy/KivyMD UI
-[✓] Spider animation
-[✓] Multiplier engine
-[✓] Crash engine
-[✓] Virtual wallet
-[✓] Cash-out
-[✓] Round history
-[✓] FastAPI backend
-[✓] WebSocket
-[✓] Database
-[✓] Authentication
-[✓] Fairness verification
-[✓] Server authority
-[✓] Security validation
-[✓] Automated tests
-[✓] Android optimization
-[✓] Buildozer configuration
-[✓] Debug APK
-[✓] Release APK
-```
+**Core Application**
+- [ ] Python project with clean modular structure
+- [ ] Kivy/KivyMD UI — all screens implemented
+- [ ] Spider animation (all states)
+- [ ] Multiplier engine (server-authoritative)
+- [ ] Crash engine (FairnessEngine + seed)
+- [ ] Virtual wallet (integer credits)
+- [ ] Cash-out (transactional, race-safe)
+- [ ] Round history (stored + displayed)
 
-This gives you a complete development path from **idea → Python code →
-backend → game engine → Android APK**.
+**Backend**
+- [ ] FastAPI application running
+- [ ] WebSocket server broadcasting game events
+- [ ] SQLite (dev) + PostgreSQL (prod) support
+- [ ] Authentication (Argon2id + JWT)
+- [ ] Fairness verification API
+- [ ] Server authority enforced on all game logic
+- [ ] Security validation (rate limiting, input validation, RBAC)
+
+**Quality**
+- [ ] Automated unit tests — all passing
+- [ ] Automated integration tests — all passing
+- [ ] Security test scenarios — all rejected correctly
+
+**Android**
+- [ ] Android-optimized UI (portrait, multiple screen sizes)
+- [ ] buildozer.spec configured and dependency-locked
+- [ ] GitHub Actions APK build workflow working
+- [ ] Debug APK built successfully
+- [ ] Release APK/AAB built and signed
+- [ ] Debug APK installed on physical phone via ADB
+- [ ] Android app connects to dev FastAPI over LAN
+- [ ] ADB + Logcat used for Android debugging
+
+**Admin Panel**
+- [ ] Admin authentication + RBAC
+- [ ] Admin dashboard with live metrics
+- [ ] User management
+- [ ] Virtual-credit adjustment with audit
+- [ ] Round monitoring
+- [ ] Game settings management
+- [ ] Fairness verification UI
+- [ ] Audit log viewer (read-only, append-only)
+- [ ] System health display
+- [ ] Admin Panel cannot alter authoritative game outcomes
+
+---
+
+## 52. Current Operating Plan
+
+This document is the **source-of-truth plan** for the Anti-Gravity project.
+
+### Fixed Development Choices
+
+| Decision | Choice |
+|---|---|
+| Developer Laptop | Windows |
+| Development Environment | Antigravity IDE |
+| Frontend | Python + Kivy + KivyMD |
+| Backend | Python + FastAPI |
+| Dev Database | SQLite |
+| Prod Database | PostgreSQL |
+| Android Test Device | Physical Android phone |
+| Phone Debugging | ADB + Android Studio Logcat |
+| APK Build | GitHub Actions + Buildozer |
+| Admin Panel | Separate authenticated web app |
+
+### Development Rules
+
+1. Use **Antigravity IDE** for implementation, refactoring, testing, and documentation.
+2. Keep frontend **and** backend in Python.
+3. Test Android behavior on the **physical phone** — not only on emulators.
+4. Use **ADB** for installation and debugging.
+5. Use **GitHub Actions** for Linux-based Buildozer APK builds.
+6. Do **not** require Ubuntu/WSL2 on the Windows laptop for the planned APK workflow.
+7. Keep the backend **authoritative** for rounds, crash points, payouts, wallet balances, and cash-out results.
+8. Keep the economy **virtual-credit-only**. No real money.
+9. Keep admin access protected by **RBAC and audit logging**.
+10. Never claim a build, test, device result, or performance benchmark unless it was actually performed.
+
+### Admin Principle
+
+The Admin Panel is a **first-class product component**. It provides authorized operational control over users, virtual credits, settings, maintenance, monitoring, fairness verification, and audit review — while fully preserving the server-authoritative game and fairness system. The Admin Panel is not a backdoor to game outcomes; it is an operational dashboard.
+
+### Next Action
+
+Start with **Sprint 1** — build the Kivy UI foundation with all screens as static layouts, then layer in logic sprint by sprint following Section 44.

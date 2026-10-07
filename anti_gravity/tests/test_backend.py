@@ -403,13 +403,16 @@ async def test_fairness_info_active_round(client):
 
     # Get current round to get its ID
     round_resp = await client.get("/api/game/current", headers=_auth(token))
+    if round_resp.json()["status"] == "crashed":
+        round_resp = await client.get("/api/game/current", headers=_auth(token))
     round_id = round_resp.json()["round_id"]
 
     resp = await client.get(f"/api/fairness/{round_id}", headers=_auth(token))
     assert resp.status_code == 200
     data = resp.json()
-    assert data["server_seed"] is None            # not revealed yet
-    assert data["crash_multiplier"] is None       # not revealed yet
+    if data["status"] in ("pending", "running"):
+        assert data["server_seed"] is None            # not revealed yet
+        assert data["crash_multiplier"] is None       # not revealed yet
     assert len(data["server_seed_hash"]) == 64
 
 

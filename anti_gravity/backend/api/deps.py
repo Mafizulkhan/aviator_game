@@ -70,3 +70,23 @@ async def get_optional_current_user(
     except Exception:
         return None
     return None
+
+
+def require_roles(*allowed_roles: str):
+    """
+    FastAPI dependency factory: verifies that current user has one of the allowed roles
+    (or is SUPER_ADMIN).
+    """
+    async def role_checker(current_user: User = Depends(get_current_user)) -> User:
+        role_val = current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role)
+        # SUPER_ADMIN always has full access
+        if role_val == "super_admin":
+            return current_user
+        if role_val in allowed_roles:
+            return current_user
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Insufficient administrative privileges",
+        )
+    return role_checker
+

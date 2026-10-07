@@ -13,8 +13,8 @@ source.dir = .
 # File extensions included in the APK
 source.include_exts = py,kv,png,jpg,jpeg,gif,wav,mp3,ogg,json,ttf,atlas
 
-# Explicitly exclude backend, tests, dev tooling, and secrets from APK
-source.exclude_dirs = backend,tests,.buildozer,.git,__pycache__,.pytest_cache,venv,.venv,dist
+# Explicitly exclude backend, admin, tests, dev tooling, and secrets from APK
+source.exclude_dirs = backend,admin,tests,.buildozer,.git,__pycache__,.pytest_cache,venv,.venv,dist
 source.exclude_patterns = *.db,*.sqlite,*.pyc,*.pyo,.env,*.log,*.spec.bak
 
 # ── Requirements (Android client ONLY) ───────────────────────────────────────

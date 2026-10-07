@@ -486,3 +486,4 @@ async def test_security_headers_present(client):
     assert resp.headers.get("X-Frame-Options") == "DENY"
     assert "1; mode=block" in resp.headers.get("X-XSS-Protection", "")
     assert resp.headers.get("Referrer-Policy") == "strict-origin-when-cross-origin"
+    assert "default-src" in resp.headers.get("Content-Security-Policy", "")

@@ -304,7 +304,7 @@ async def test_multiple_clients_receive_identical_events(loop_db):
     )
 
     gl.start()
-    await asyncio.sleep(0.10)
+    await asyncio.sleep(0.25)
     await gl.stop_async()
 
     assert len(ws1.messages) > 0

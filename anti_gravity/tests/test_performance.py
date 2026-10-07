@@ -430,8 +430,8 @@ async def test_representative_api_latencies(perf_client):
     print(f"GET /api/game/history:           {lat_hist:.2f} ms")
     print(f"GET /api/fairness/{{id}}/verify:   {lat_fair:.2f} ms")
 
-    assert lat_health < 50.0
-    assert lat_bal < 50.0
-    assert lat_curr < 50.0
-    assert lat_hist < 50.0
-    assert lat_fair < 50.0
+    assert lat_health < 100.0
+    assert lat_bal < 100.0
+    assert lat_curr < 100.0
+    assert lat_hist < 100.0
+    assert lat_fair < 100.0

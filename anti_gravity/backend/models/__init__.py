@@ -40,6 +40,15 @@ def _now() -> datetime:
 
 
 # ── Enums ──────────────────────────────────────────────────────────────────────
+class UserRole(str, enum.Enum):
+    SUPER_ADMIN = "super_admin"
+    ADMIN       = "admin"
+    OPERATOR    = "operator"
+    AUDITOR     = "auditor"
+    SUPPORT     = "support"
+    PLAYER      = "player"
+
+
 class UserStatus(str, enum.Enum):
     active   = "active"
     banned   = "banned"
@@ -63,6 +72,7 @@ class TransactionType(str, enum.Enum):
     bet              = "bet"
     payout           = "payout"
     refund           = "refund"
+    admin_adjustment = "admin_adjustment"
 
 
 # ── User ───────────────────────────────────────────────────────────────────────
@@ -77,13 +87,16 @@ class User(Base):
     username:      Mapped[str]        = mapped_column(String(50), unique=True, nullable=False, index=True)
     email:         Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
     password_hash: Mapped[str]        = mapped_column(String(255), nullable=False)
+    role:          Mapped[UserRole]   = mapped_column(SAEnum(UserRole), default=UserRole.PLAYER, nullable=False)
     status:        Mapped[UserStatus] = mapped_column(SAEnum(UserStatus), default=UserStatus.active)
     created_at:    Mapped[datetime]   = mapped_column(DateTime(timezone=True), default=_now)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     wallet:       Mapped["Wallet"]            = relationship("Wallet", back_populates="user", uselist=False)
     bets:         Mapped[list["Bet"]]         = relationship("Bet", back_populates="user")
     transactions: Mapped[list["Transaction"]] = relationship("Transaction", back_populates="user")
+    audit_logs:   Mapped[list["AuditLog"]]    = relationship("AuditLog", back_populates="admin_user")
 
 
 # ── Wallet ─────────────────────────────────────────────────────────────────────
@@ -177,3 +190,40 @@ class Transaction(Base):
     created_at:     Mapped[datetime]        = mapped_column(DateTime(timezone=True), default=_now)
 
     user: Mapped["User"] = relationship("User", back_populates="transactions")
+
+
+# ── Game Settings (Singleton Configuration) ───────────────────────────────────
+class GameSettings(Base):
+    __tablename__ = "game_settings"
+
+    id:                Mapped[int]        = mapped_column(Integer, primary_key=True, autoincrement=True)
+    minimum_bet:       Mapped[int]        = mapped_column(Integer, default=10, nullable=False)
+    maximum_bet:       Mapped[int]        = mapped_column(Integer, default=10000, nullable=False)
+    starting_balance:  Mapped[int]        = mapped_column(Integer, default=1000, nullable=False)
+    house_edge:        Mapped[float]      = mapped_column(Float, default=0.03, nullable=False)
+    game_speed:        Mapped[float]      = mapped_column(Float, default=1.0, nullable=False)
+    animation_speed:   Mapped[float]      = mapped_column(Float, default=1.0, nullable=False)
+    betting_window_ms: Mapped[int]        = mapped_column(Integer, default=5000, nullable=False)
+    maintenance_mode:  Mapped[bool]       = mapped_column(Boolean, default=False, nullable=False)
+    updated_at:        Mapped[datetime]   = mapped_column(DateTime(timezone=True), default=_now, onupdate=_now)
+    updated_by:        Mapped[str | None] = mapped_column(String(50), nullable=True)
+
+
+# ── Audit Log (Append-Only) ────────────────────────────────────────────────────
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    __table_args__ = (
+        Index("ix_audit_logs_action", "action"),
+        Index("ix_audit_logs_created_at", "created_at"),
+    )
+
+    id:            Mapped[int]             = mapped_column(Integer, primary_key=True, autoincrement=True)
+    admin_user_id: Mapped[int | None]      = mapped_column(ForeignKey("users.id"), nullable=True)
+    action:        Mapped[str]             = mapped_column(String(100), nullable=False)
+    target_type:   Mapped[str | None]      = mapped_column(String(50), nullable=True)
+    target_id:     Mapped[str | None]      = mapped_column(String(100), nullable=True)
+    details:       Mapped[str | None]      = mapped_column(Text, nullable=True)
+    ip_address:    Mapped[str | None]      = mapped_column(String(50), nullable=True)
+    created_at:    Mapped[datetime]        = mapped_column(DateTime(timezone=True), default=_now)
+
+    admin_user: Mapped["User | None"] = relationship("User", back_populates="audit_logs")

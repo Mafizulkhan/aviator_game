@@ -164,6 +164,18 @@ async def join_round(
     - Returns (bet, round, new_balance).
     Raises ValueError on any validation failure.
     """
+    # Check maintenance mode and bet limits from GameSettings
+    from backend.models import GameSettings
+    gs_res = await db.execute(select(GameSettings).limit(1))
+    gs = gs_res.scalar_one_or_none()
+    if gs and gs.maintenance_mode:
+        raise ValueError("Server is under maintenance. New bets are temporarily disabled.")
+
+    min_bet = gs.minimum_bet if gs else settings.MIN_BET
+    max_bet = gs.maximum_bet if gs else settings.MAX_BET
+    if amount < min_bet or amount > max_bet:
+        raise ValueError(f"Bet amount must be between {min_bet} and {max_bet}")
+
     round_row = await get_current_round(db)
 
     # Auto-start pending rounds
@@ -176,7 +188,12 @@ async def join_round(
     # Check if the round has already crashed
     crashed = await resolve_round_if_crashed(db, round_row)
     if crashed:
-        raise ValueError("Round just ended — please try again")
+        round_row = await get_current_round(db)
+        if round_row.status == RoundStatus.pending:
+            round_row = await start_round(db, round_row)
+        crashed = await resolve_round_if_crashed(db, round_row)
+        if crashed:
+            raise ValueError("Round just ended — please try again")
 
     # Prevent duplicate bets
     existing = await db.execute(

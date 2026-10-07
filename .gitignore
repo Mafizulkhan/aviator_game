@@ -1,0 +1,35 @@
+# Python / Bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment & secrets
+.env
+.env.local
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Android & Buildozer
+.buildozer/
+bin/
+dist/
+*.apk
+*.aab
+.gradle/
+*.keystore
+*.jks
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

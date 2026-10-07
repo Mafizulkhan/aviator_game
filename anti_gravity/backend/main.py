@@ -26,10 +26,13 @@ from backend.api.player   import router as player_router
 from backend.api.game     import router as game_router
 from backend.api.fairness import router as fairness_router
 from backend.api.audit    import router as audit_router
+from backend.api.admin    import router as admin_router
 from backend.api.websocket import router as websocket_router
 from backend.ws.game_loop import game_loop
 from backend.ws.connection_manager import manager
 from backend.schemas import HealthResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 
 # ── Lifespan ───────────────────────────────────────────────────────────────────
@@ -51,9 +54,9 @@ async def lifespan(app: FastAPI):
 
 # ── App ────────────────────────────────────────────────────────────────────────
 app = FastAPI(
-    title="Anti-Gravity API",
+    title="Anti-Gravity API & Admin Panel",
     description=(
-        "Backend for the Anti-Gravity virtual-credit crash arcade game. "
+        "Backend & Admin Management System for Anti-Gravity virtual-credit crash arcade game. "
         "Virtual credits only — no deposits, no withdrawals, no real money."
     ),
     version="0.2.0",
@@ -68,6 +71,13 @@ async def add_security_headers(request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; "
+        "img-src 'self' data:; connect-src 'self' ws: wss:;"
+    )
+    if request.url.scheme == "https":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
 
@@ -86,7 +96,18 @@ app.include_router(player_router)
 app.include_router(game_router)
 app.include_router(fairness_router)
 app.include_router(audit_router)
+app.include_router(admin_router)
 app.include_router(websocket_router)
+
+
+# ── Admin Web Frontend Static Mounting ─────────────────────────────────────────
+admin_frontend_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "admin", "frontend")
+if os.path.exists(admin_frontend_dir):
+    app.mount("/admin/static", StaticFiles(directory=admin_frontend_dir), name="admin_static")
+
+    @app.get("/admin", include_in_schema=False)
+    async def serve_admin_index():
+        return FileResponse(os.path.join(admin_frontend_dir, "index.html"))
 
 
 # ── Health ─────────────────────────────────────────────────────────────────────
@@ -94,3 +115,4 @@ app.include_router(websocket_router)
 async def health():
     """Server health check — returns ok + version."""
     return HealthResponse(status="ok", version="0.2.0", mode="demo")
+

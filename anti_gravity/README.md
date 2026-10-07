@@ -527,8 +527,6 @@ A release/signed APK sprint will cover:
 
 ---
 
-## Development Roadmap
-
 | Sprint | Focus |
 |--------|-------|
 | 1 | UI screens (Kivy/KivyMD) ✅ |
@@ -539,7 +537,23 @@ A release/signed APK sprint will cover:
 | 6 | Authentication + security ✅ |
 | 7 | Performance + stability ✅ |
 | 8 | Android APK via Buildozer + GitHub Actions CI ✅ |
-| 9 | Release signing + Play Store |
+| 9 | Admin Panel Web App + RBAC + Audit Engine ✅ |
+| 10 | Release signing + Play Store |
+
+---
+
+## Admin Operations & Audit Panel
+
+The Anti-Gravity Admin Console is accessible via web browser at `http://localhost:8000/admin`.
+
+- **Platform:** Authenticated Single-Page Web Dashboard (`admin/frontend/`)
+- **Protected APIs:** `/api/admin/*`
+- **Authentication:** Argon2id + JWT token
+- **RBAC Roles:** `SUPER_ADMIN`, `ADMIN`, `OPERATOR`, `AUDITOR`, `SUPPORT`
+- **Audit Logging:** Append-only database logs for all administrative actions
+- **Fairness Inspector:** One-click cryptographic verification of pre-committed seeds and HMAC outcomes
+- **Outcome Protection:** Strictly no backdoor or mechanism to manipulate authoritative round outcomes or crash multipliers
+- **Maintenance Mode:** Server-side toggle to gracefully stop new bets while allowing active rounds to finish
 
 ---
 
