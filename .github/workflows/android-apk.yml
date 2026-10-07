@@ -60,9 +60,9 @@ jobs:
           KIVY_WINDOW: "mock"
         run: |
           mkdir -p test-results
-          python -m pytest tests/ -v --tb=short | tee test-results/pytest.log
+          python -m pytest tests/ -v --tb=short --junitxml=test-results/test-results.xml
 
-      - name: Upload test results on failure
+      - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -70,14 +70,26 @@ jobs:
           path: anti_gravity/test-results/
           retention-days: 7
 
-      - name: Verify test count >= 200
+      - name: Verify executed test count >= 200
         working-directory: anti_gravity
-        env:
-          PYTHONPATH: "."
-          KIVY_NO_ARGS: "1"
-          KIVY_NO_CONSOLELOG: "1"
-          KIVY_WINDOW: "mock"
-        run: python ci/count_tests.py
+        run: |
+          python -c "import sys, os, xml.etree.ElementTree as ET
+          xml_path = 'test-results/test-results.xml'
+          if not os.path.exists(xml_path):
+              print(f'ERROR: Missing {xml_path}', file=sys.stderr)
+              sys.exit(1)
+          try:
+              tree = ET.parse(xml_path)
+              root = tree.getroot()
+              count = len(root.findall('.//testcase'))
+              print(f'Executed test count: {count}')
+              if count < 200:
+                  print(f'ERROR: Expected >=200 tests, found {count}', file=sys.stderr)
+                  sys.exit(1)
+          except Exception as e:
+              print(f'ERROR: Failed parsing JUnit XML: {e}', file=sys.stderr)
+              sys.exit(1)
+          "
 
   # ── Job 2: Build debug APK ───────────────────────────────────────────────────
   build-apk:
