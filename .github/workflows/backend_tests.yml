@@ -1,0 +1,75 @@
+name: Backend Test Suite
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Backend Test Suite (202 tests)
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: anti_gravity/requirements.txt
+
+      - name: Install system dependencies for testing
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            libgl1-mesa-dev libgles2-mesa-dev libsdl2-dev \
+            libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
+
+      - name: Install Python dependencies
+        working-directory: anti_gravity
+        run: pip install -r requirements.txt
+
+      - name: Run full test suite
+        working-directory: anti_gravity
+        env:
+          PYTHONPATH: "."
+          KIVY_NO_ARGS: "1"
+          KIVY_NO_CONSOLELOG: "1"
+          KIVY_WINDOW: "mock"
+        run: |
+          mkdir -p test-results
+          python -m pytest -v --tb=short --junitxml=test-results/test-results.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: anti_gravity/test-results/
+          retention-days: 7
+
+      - name: Verify executed test count >= 200
+        working-directory: anti_gravity
+        run: |
+          python -c "import sys, os, xml.etree.ElementTree as ET
+          xml_path = 'test-results/test-results.xml'
+          if not os.path.exists(xml_path):
+              print(f'ERROR: Missing {xml_path}', file=sys.stderr)
+              sys.exit(1)
+          try:
+              tree = ET.parse(xml_path)
+              root = tree.getroot()
+              count = len(root.findall('.//testcase'))
+              print(f'Executed test count: {count}')
+              if count < 200:
+                  print(f'ERROR: Expected >=200 tests, found {count}', file=sys.stderr)
+                  sys.exit(1)
+          except Exception as e:
+              print(f'ERROR: Failed parsing JUnit XML: {e}', file=sys.stderr)
+              sys.exit(1)
+          "

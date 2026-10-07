@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zero Gravity — Admin Operations & Audit Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/static/style.css">
+</head>
+<body class="dark-theme">
+
+  <!-- ── AUTH LOGIN VIEW ──────────────────────────────────────────────────────── -->
+  <div id="login-view" class="auth-wrapper">
+    <div class="auth-card glass-panel">
+      <div class="logo-area">
+        <div class="spider-icon">🕸️</div>
+        <h1 class="glow-title">ZERO GRAVITY</h1>
+        <p class="subtitle">Admin Operational Control & Audit Console</p>
+      </div>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="username">Admin Username</label>
+          <input type="text" id="username" required placeholder="superadmin / admin" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" required placeholder="••••••••••••" autocomplete="current-password">
+        </div>
+        <button type="submit" id="login-btn" class="btn btn-primary btn-block">AUTHENTICATE</button>
+        <div id="login-error" class="error-msg hidden"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── MAIN DASHBOARD VIEW ─────────────────────────────────────────────────── -->
+  <div id="dashboard-view" class="app-container hidden">
+    <!-- Top Header -->
+    <header class="top-bar glass-panel">
+      <div class="brand">
+        <span class="brand-icon">🕷️</span>
+        <span class="brand-title">ZERO GRAVITY <span class="badge badge-ops">OPS CONTROL</span></span>
+      </div>
+      <div class="header-status">
+        <div id="maintenance-badge" class="badge badge-warning hidden">MAINTENANCE MODE ON</div>
+        <div class="status-indicator live">
+          <span class="dot"></span>
+          <span id="ws-status-text">WS LIVE</span>
+        </div>
+        <div class="admin-profile">
+          <span id="current-admin-name" class="admin-name">Admin</span>
+          <span id="current-admin-role" class="badge badge-role">SUPER_ADMIN</span>
+        </div>
+        <button id="logout-btn" class="btn btn-secondary btn-sm">LOGOUT</button>
+      </div>
+    </header>
+
+    <!-- App Body: Sidebar + Main Content -->
+    <div class="main-body">
+      <aside class="sidebar glass-panel">
+        <nav class="nav-menu">
+          <button class="nav-tab active" data-tab="tab-overview">📊 Live Overview</button>
+          <button class="nav-tab" data-tab="tab-users">👥 Users & Accounts</button>
+          <button class="nav-tab" data-tab="tab-credits">💰 Virtual Credits</button>
+          <button class="nav-tab" data-tab="tab-rounds">🎮 Round Telemetry</button>
+          <button class="nav-tab" data-tab="tab-settings">⚙️ Game Settings</button>
+          <button class="nav-tab" data-tab="tab-fairness">🔒 Fairness Verifier</button>
+          <button class="nav-tab" data-tab="tab-audit">📜 Audit Logs</button>
+          <button class="nav-tab" data-tab="tab-health">🏥 System Health</button>
+        </nav>
+      </aside>
+
+      <main class="content-area">
+
+        <!-- ── TAB: OVERVIEW / DASHBOARD ── -->
+        <section id="tab-overview" class="tab-pane active">
+          <div class="pane-header">
+            <h2>Real-Time Operational Overview</h2>
+            <button id="refresh-dashboard-btn" class="btn btn-secondary btn-sm">⟳ Refresh</button>
+          </div>
+
+          <!-- Live Multiplier Hero Card -->
+          <div class="hero-grid">
+            <div class="card glass-panel live-card">
+              <h3>Active Round Telemetry</h3>
+              <div class="round-status-display">
+                <div class="live-mult-value" id="dash-multiplier">1.00x</div>
+                <div class="round-subinfo">
+                  <span>Round #<strong id="dash-round-number">-</strong></span>
+                  <span>Status: <span id="dash-round-status" class="badge badge-info">IDLE</span></span>
+                  <span>Active Players: <strong id="dash-active-players">0</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card glass-panel stats-card">
+              <h3>Economy Summary</h3>
+              <div class="metric-row">
+                <div class="metric-item">
+                  <span class="label">Credits in Circulation</span>
+                  <span class="value" id="dash-circulation">0</span>
+                </div>
+                <div class="metric-item">
+                  <span class="label">Total Users</span>
+                  <span class="value" id="dash-total-users">0</span>
+                </div>
+                <div class="metric-item">
+                  <span class="label">Active Today</span>
+                  <span class="value" id="dash-games-today">0</span>
+                </div>
+                <div class="metric-item">
+                  <span class="label">Cash-out Rate</span>
+                  <span class="value" id="dash-cashout-rate">0.0%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick System Pulse -->
+          <div class="system-pulse-grid">
+            <div class="pulse-card glass-panel">
+              <span class="pulse-title">API Response</span>
+              <span class="pulse-val text-green" id="dash-api-health">Healthy (14ms)</span>
+            </div>
+            <div class="pulse-card glass-panel">
+              <span class="pulse-title">WebSocket Clients</span>
+              <span class="pulse-val text-cyan" id="dash-ws-count">0 Online</span>
+            </div>
+            <div class="pulse-card glass-panel">
+              <span class="pulse-title">Database Storage</span>
+              <span class="pulse-val text-green" id="dash-db-status">Connected</span>
+            </div>
+            <div class="pulse-card glass-panel">
+              <span class="pulse-title">Fairness Engine</span>
+              <span class="pulse-val text-green">HMAC-SHA256 Ready</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── TAB: USERS ── -->
+        <section id="tab-users" class="tab-pane">
+          <div class="pane-header">
+            <h2>User Account Management</h2>
+            <div class="search-bar">
+              <input type="text" id="user-search-input" placeholder="Search by username or email...">
+              <select id="user-role-filter">
+                <option value="">All Roles</option>
+                <option value="player">Player</option>
+                <option value="operator">Operator</option>
+                <option value="auditor">Auditor</option>
+                <option value="admin">Admin</option>
+                <option value="super_admin">Super Admin</option>
+              </select>
+              <select id="user-status-filter">
+                <option value="">All Statuses</option>
+                <option value="active">Active</option>
+                <option value="banned">Banned</option>
+              </select>
+              <button id="search-users-btn" class="btn btn-primary btn-sm">Filter</button>
+            </div>
+          </div>
+
+          <div class="table-container glass-panel">
+            <table class="data-table" id="users-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Balance</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody">
+                <!-- Rows injected by app.js -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ── TAB: VIRTUAL CREDITS ── -->
+        <section id="tab-credits" class="tab-pane">
+          <div class="pane-header">
+            <h2>Virtual Credit Management & Financial Audit</h2>
+            <button id="open-credit-modal-btn" class="btn btn-primary btn-sm">+ Manual Credit Adjustment</button>
+          </div>
+
+          <div class="table-container glass-panel">
+            <h3>Recent Financial Transactions</h3>
+            <table class="data-table" id="transactions-table">
+              <thead>
+                <tr>
+                  <th>TX ID</th>
+                  <th>User</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Before</th>
+                  <th>After</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="transactions-tbody">
+                <!-- Injected by app.js -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ── TAB: ROUNDS ── -->
+        <section id="tab-rounds" class="tab-pane">
+          <div class="pane-header">
+            <h2>Game Round Telemetry & Bets</h2>
+            <div class="search-bar">
+              <select id="round-status-filter">
+                <option value="">All Statuses</option>
+                <option value="crashed">Crashed</option>
+                <option value="running">Running</option>
+                <option value="pending">Pending</option>
+              </select>
+              <button id="filter-rounds-btn" class="btn btn-secondary btn-sm">Refresh</button>
+            </div>
+          </div>
+
+          <div class="table-container glass-panel">
+            <table class="data-table" id="rounds-table">
+              <thead>
+                <tr>
+                  <th>Round #</th>
+                  <th>Status</th>
+                  <th>Multiplier</th>
+                  <th>Seed Commitment (Hash)</th>
+                  <th>Bets</th>
+                  <th>Wagered</th>
+                  <th>Payout</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rounds-tbody">
+                <!-- Injected by app.js -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ── TAB: GAME SETTINGS ── -->
+        <section id="tab-settings" class="tab-pane">
+          <div class="pane-header">
+            <h2>Game Engine Configuration</h2>
+            <span class="notice-text">All modifications are immutably logged in the audit trail.</span>
+          </div>
+
+          <div class="settings-form-wrapper glass-panel">
+            <form id="game-settings-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="set-min-bet">Minimum Bet (Virtual Credits)</label>
+                  <input type="number" id="set-min-bet" min="1" max="10000" required>
+                </div>
+                <div class="form-group">
+                  <label for="set-max-bet">Maximum Bet (Virtual Credits)</label>
+                  <input type="number" id="set-max-bet" min="10" max="1000000" required>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="set-start-bal">Starting Balance (New Players)</label>
+                  <input type="number" id="set-start-bal" min="0" max="100000" required>
+                </div>
+                <div class="form-group">
+                  <label for="set-window">Betting Window (ms)</label>
+                  <input type="number" id="set-window" min="1000" max="30000" required>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="set-house-edge">House Edge (Super Admin Only, e.g. 0.03 for 3%)</label>
+                  <input type="number" id="set-house-edge" step="0.01" min="0.00" max="0.20" required>
+                </div>
+                <div class="form-group toggle-group">
+                  <label for="set-maintenance">Maintenance Mode</label>
+                  <div class="toggle-switch">
+                    <input type="checkbox" id="set-maintenance">
+                    <span class="slider"></span>
+                  </div>
+                  <small class="help-text">Blocks new bets; active round concludes naturally.</small>
+                </div>
+              </div>
+
+              <button type="submit" id="save-settings-btn" class="btn btn-primary">SAVE CONFIGURATION</button>
+              <span id="settings-status-msg" class="status-msg"></span>
+            </form>
+          </div>
+        </section>
+
+        <!-- ── TAB: FAIRNESS VERIFIER ── -->
+        <section id="tab-fairness" class="tab-pane">
+          <div class="pane-header">
+            <h2>Cryptographic Fairness Verification</h2>
+            <p class="subtitle">Validate SHA-256 seed commitment and HMAC-SHA256 deterministic crash calculation.</p>
+          </div>
+
+          <div class="verifier-card glass-panel">
+            <div class="form-group">
+              <label for="fair-round-id">Target Round ID</label>
+              <div class="input-with-btn">
+                <input type="number" id="fair-round-id" placeholder="Enter Round ID to audit (e.g. 1)">
+                <button id="run-verify-btn" class="btn btn-primary">VERIFY PROOF</button>
+              </div>
+            </div>
+
+            <div id="fairness-result-panel" class="verification-panel hidden">
+              <div class="result-header">
+                <span id="fair-status-badge" class="badge badge-success">VERIFIED PASS</span>
+                <h3 id="fair-round-title">Round #1 Proof</h3>
+              </div>
+              <div class="crypto-details">
+                <div class="crypto-row">
+                  <span class="crypto-label">Pre-round Commitment Hash:</span>
+                  <code class="crypto-code" id="fair-seed-hash">-</code>
+                </div>
+                <div class="crypto-row">
+                  <span class="crypto-label">Revealed Server Seed:</span>
+                  <code class="crypto-code" id="fair-revealed-seed">-</code>
+                </div>
+                <div class="crypto-row">
+                  <span class="crypto-label">Recorded Crash Multiplier:</span>
+                  <strong class="text-multiplier" id="fair-crash-mult">-</strong>
+                </div>
+                <div class="crypto-row">
+                  <span class="crypto-label">Verification Message:</span>
+                  <span id="fair-message" class="text-green">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── TAB: AUDIT LOGS ── -->
+        <section id="tab-audit" class="tab-pane">
+          <div class="pane-header">
+            <h2>Append-Only Audit Logs</h2>
+            <button id="refresh-audit-btn" class="btn btn-secondary btn-sm">⟳ Refresh</button>
+          </div>
+
+          <div class="table-container glass-panel">
+            <table class="data-table" id="audit-table">
+              <thead>
+                <tr>
+                  <th>Log ID</th>
+                  <th>Timestamp</th>
+                  <th>Admin</th>
+                  <th>Action</th>
+                  <th>Target Type</th>
+                  <th>Target ID</th>
+                  <th>IP Address</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody id="audit-tbody">
+                <!-- Injected by app.js -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- ── TAB: SYSTEM HEALTH ── -->
+        <section id="tab-health" class="tab-pane">
+          <div class="pane-header">
+            <h2>Subsystem Diagnostics</h2>
+            <button id="refresh-health-btn" class="btn btn-secondary btn-sm">Run Diagnostic</button>
+          </div>
+
+          <div class="health-grid">
+            <div class="health-card glass-panel">
+              <h3>FastAPI Backend Core</h3>
+              <div class="status-row">
+                <span>API Status:</span>
+                <strong class="text-green" id="health-api-status">OK</strong>
+              </div>
+              <div class="status-row">
+                <span>Uptime:</span>
+                <span id="health-uptime">-</span>
+              </div>
+              <div class="status-row">
+                <span>Version:</span>
+                <span>0.2.0</span>
+              </div>
+            </div>
+
+            <div class="health-card glass-panel">
+              <h3>Database Storage</h3>
+              <div class="status-row">
+                <span>Database Connection:</span>
+                <strong class="text-green" id="health-db-status">OK</strong>
+              </div>
+              <div class="status-row">
+                <span>Engine Type:</span>
+                <span>SQLite (Dev) / PostgreSQL (Prod)</span>
+              </div>
+            </div>
+
+            <div class="health-card glass-panel">
+              <h3>Real-Time Game Loop</h3>
+              <div class="status-row">
+                <span>Ticker Task:</span>
+                <strong class="text-green" id="health-loop-status">RUNNING</strong>
+              </div>
+              <div class="status-row">
+                <span>Active WebSocket Sockets:</span>
+                <span id="health-ws-conns">0</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ── MODALS ── -->
+  <!-- Wallet Adjust Modal -->
+  <div id="credit-modal" class="modal-overlay hidden">
+    <div class="modal-card glass-panel">
+      <h3>Manual Virtual Credit Adjustment</h3>
+      <p class="subtitle">All adjustments are audited and must have a documented reason.</p>
+      <form id="credit-adjust-form">
+        <div class="form-group">
+          <label for="adj-user-id">Target User ID</label>
+          <input type="number" id="adj-user-id" required placeholder="User ID">
+        </div>
+        <div class="form-group">
+          <label for="adj-amount">Credit Adjustment (Signed Integer, e.g. +500 or -200)</label>
+          <input type="number" id="adj-amount" required placeholder="+1000">
+        </div>
+        <div class="form-group">
+          <label for="adj-reason">Mandatory Audit Reason</label>
+          <input type="text" id="adj-reason" required placeholder="e.g., Demo credit grant / test allocation">
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="cancel-credit-modal" class="btn btn-secondary">Cancel</button>
+          <button type="submit" class="btn btn-primary">Apply Adjustment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- User Detail Modal -->
+  <div id="user-detail-modal" class="modal-overlay hidden">
+    <div class="modal-card glass-panel">
+      <h3 id="modal-user-title">User Profile</h3>
+      <div id="modal-user-content" class="user-detail-body">
+        <!-- Injected -->
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="close-user-modal" class="btn btn-secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/admin/static/app.js"></script>
+</body>
+</html>
