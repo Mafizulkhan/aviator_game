@@ -40,6 +40,13 @@ jobs:
           cache: pip
           cache-dependency-path: anti_gravity/requirements.txt
 
+      - name: Install system dependencies for testing
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            libgl1-mesa-dev libgles2-mesa-dev libsdl2-dev \
+            libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
+
       - name: Install Python dependencies
         working-directory: anti_gravity
         run: pip install -r requirements.txt
@@ -47,6 +54,7 @@ jobs:
       - name: Run full test suite
         working-directory: anti_gravity
         env:
+          PYTHONPATH: "."
           KIVY_NO_ARGS: "1"
           KIVY_NO_CONSOLELOG: "1"
           KIVY_WINDOW: "mock"
@@ -55,6 +63,7 @@ jobs:
       - name: Verify test count >= 200
         working-directory: anti_gravity
         env:
+          PYTHONPATH: "."
           KIVY_NO_ARGS: "1"
           KIVY_NO_CONSOLELOG: "1"
           KIVY_WINDOW: "mock"
