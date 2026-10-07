@@ -77,13 +77,7 @@ jobs:
           KIVY_NO_ARGS: "1"
           KIVY_NO_CONSOLELOG: "1"
           KIVY_WINDOW: "mock"
-        run: |
-          COUNT=$(python -m pytest tests/ --collect-only -q | grep "::" | wc -l)
-          echo "Collected test count: $COUNT"
-          if [ "$COUNT" -lt 200 ]; then
-            echo "ERROR: Expected >=200 tests, found $COUNT"
-            exit 1
-          fi
+        run: python ci/count_tests.py
 
   # ── Job 2: Build debug APK ───────────────────────────────────────────────────
   build-apk:
