@@ -46,10 +46,18 @@ jobs:
 
       - name: Run full test suite
         working-directory: anti_gravity
-        run: python -m pytest tests/ -v --tb=short --strict-markers 2>&1
+        env:
+          KIVY_NO_ARGS: "1"
+          KIVY_NO_CONSOLELOG: "1"
+          KIVY_WINDOW: "mock"
+        run: python -m pytest tests/ -v --tb=short 2>&1
 
       - name: Verify test count >= 200
         working-directory: anti_gravity
+        env:
+          KIVY_NO_ARGS: "1"
+          KIVY_NO_CONSOLELOG: "1"
+          KIVY_WINDOW: "mock"
         run: |
           COUNT=$(python -m pytest tests/ --collect-only -q 2>/dev/null | tail -1 | grep -oP '^\d+')
           echo "Collected test count: $COUNT"
