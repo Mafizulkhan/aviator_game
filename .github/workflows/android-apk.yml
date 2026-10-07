@@ -78,7 +78,7 @@ jobs:
           KIVY_NO_CONSOLELOG: "1"
           KIVY_WINDOW: "mock"
         run: |
-          COUNT=$(python -m pytest tests/ --collect-only -q 2>/dev/null | tail -1 | grep -oP '^\d+')
+          COUNT=$(python -m pytest tests/ --collect-only -q | grep "::" | wc -l)
           echo "Collected test count: $COUNT"
           if [ "$COUNT" -lt 200 ]; then
             echo "ERROR: Expected >=200 tests, found $COUNT"
